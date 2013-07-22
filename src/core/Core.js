@@ -11,9 +11,12 @@ ORB.Core = function ( element ) {
 	// data discovery platform
 
 
-	//this.date		// 
-	//this.sunlight	// direction vector
-	//this.
+	// camera
+	// sunlight direction
+	// virtual date
+	// hmm???
+
+	
 };
 
 ORB.Core.prototype = {

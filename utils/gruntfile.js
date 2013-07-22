@@ -7,7 +7,7 @@ module.exports = function( grunt ) {
 		pkg: grunt.file.readJSON('package.json'),
 		concat: {
 			build: {
-				dest:	'../build/orb.js',
+				dest:	'../build/Orb.js',
 				//src:	['../src/orb.js', '../src/core/*.js', '../src/**/*.js']
 				src:	[
 					'../src/orb.js',
@@ -22,9 +22,9 @@ module.exports = function( grunt ) {
 				banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
 			},
 			build: {
-				dest:	'../build/orb.min.js',
+				dest:	'../build/Orb.min.js',
 
-				src:	'../build/orb.js'
+				src:	'../build/Orb.js'
 			}
 		},
 
@@ -38,7 +38,6 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks('grunt-contrib-concat');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-watch');
-
 
 	grunt.registerTask('default', ['concat', 'uglify']);
 };

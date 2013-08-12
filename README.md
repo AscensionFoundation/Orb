@@ -1,5 +1,7 @@
 # Orb Visualization #
 
+https://trello.com/axiorb
+
 #### Visualization ####
 
 There's data everywhere out there in the world. And as our world becomes more and more interconnected, the more data there is and the more every event affects the rest of the world. We output so much data, but unfortunately they're locked up in reports and spreadsheets and obfuscated behind walls of numbers. We need to be able to actually see what's happening in order to understand it, and therefore Orb.
@@ -11,3 +13,10 @@ Cheers, let's get started!
 ### Usage ###
 
 Download the minified library and resources and include it in your html. We will have servers set up to distribute the resources required to properly render some of the layers, but you can also serve those on your own.
+
+
+Build & Utilities:
+./utils/ grunt
+./utils/ grunt watch
+./utils/ grunt examples
+localhost:7777

@@ -9,6 +9,11 @@ ORB.AtmosphericLayer = function () {
 
 };
 
+ORB.AtmosphericLayer.prototype = Object.create( ORB.Layer.prototype );
+
+
+
+
 
 ORB.AtmosphericInLayer = function () {
 	// ease in animation layer

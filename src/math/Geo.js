@@ -2,12 +2,12 @@
  * @author axiverse / http://axiverse.com
  */
 
- ORB.Geo = function ( latitude, longitude ) {
+ orb.Geo = function ( latitude, longitude ) {
  	this.latitude = latitude || 0;
  	this.longitude = longitude || 0;
  };
 
- ORB.Geo.prototype = {
+ orb.Geo.prototype = {
 
  	constructor: ORG.Geo,
 
@@ -53,7 +53,7 @@
  	},
 
  	clone: function () {
- 		return new ORB.Geo( this.latitude, this.longitude );
+ 		return new orb.Geo( this.latitude, this.longitude );
  	}
 
  };

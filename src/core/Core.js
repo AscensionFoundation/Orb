@@ -2,7 +2,7 @@
  * @author axiverse / http://axiverse.com
  */
 
-ORB.Core = function ( element ) {
+orb.Core = function ( element ) {
 
 	// create nested 100% element
 
@@ -25,9 +25,9 @@ ORB.Core = function ( element ) {
 
 };
 
-ORB.Core.prototype = {
+orb.Core.prototype = {
 
-	constructor: ORB.Core,
+	constructor: orb.Core,
 
 	setDate: function ( date ) {
 

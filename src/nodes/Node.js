@@ -2,9 +2,9 @@
 
 
 
-ORB.Node = function () {
+orb.Node = function () {
 
-	this._id = ORB.NodeIdCount ++;
+	this._id = orb.NodeIdCount ++;
 	this._uuid = '';
 
 	this._name = '';
@@ -17,7 +17,7 @@ ORB.Node = function () {
 
 };
 
-ORB.Node.prototype = {
+orb.Node.prototype = {
 
 
 	attribute: function ( key, value ) {
@@ -42,7 +42,7 @@ ORB.Node.prototype = {
 
 		}
 
-		if ( node instanceof ORB.Node ) {
+		if ( node instanceof orb.Node ) {
 
 			if ( node.parent !== undefined ) {
 
@@ -65,4 +65,4 @@ ORB.Node.prototype = {
 	}
 };
 
-ORB.NodeIdCount = 0;
+orb.NodeIdCount = 0;

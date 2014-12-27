@@ -5,22 +5,22 @@
 // atmospheric scattering shaders for realistic rendering
 // http://etd.dtu.dk/thesis/58645/imm2554.pdf
 
-ORB.AtmosphericLayer = function () {
+orb.AtmosphericLayer = function () {
 
 };
 
-ORB.AtmosphericLayer.prototype = Object.create( ORB.Layer.prototype );
+orb.AtmosphericLayer.prototype = Object.create( orb.Layer.prototype );
 
 
 
 
 
-ORB.AtmosphericInLayer = function () {
+orb.AtmosphericInLayer = function () {
 	// ease in animation layer
 	// in -> stable -> out
 };
 
-ORB.AtmosphericOutLayer = function () {
+orb.AtmosphericOutLayer = function () {
 	// ease out animation layer
 
 };

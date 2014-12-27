@@ -2,13 +2,13 @@
  * @author axiverse / http://axiverse.com
  */
 
-ORB.Layer = function () {
+orb.Layer = function () {
 
 };
 
-ORB.Layer.prototype = {
+orb.Layer.prototype = {
 
-	constructor: ORB.Layer;
+	constructor: orb.Layer
 
 	//?? element in the scene -> extension to THREE.js Object3D?
 

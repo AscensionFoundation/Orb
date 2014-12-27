@@ -1,16 +1,16 @@
 
 
-ORB.Sphere = function ( origin, radius ) {
+orb.Sphere = function ( origin, radius ) {
 	this.origin = origin;
 	this.radius = radius;
 }
 
-ORB.Ray = function ( origin, direction ) {
+orb.Ray = function ( origin, direction ) {
 	this.origin = origin;
 	this.direction = radius;
 }
 
-ORB.intersects = function ( sphere, ray ) {
+orb.intersects = function ( sphere, ray ) {
 
 	var r = sphere.radius;
 	var s = sphere.origin;

@@ -1,0 +1,28 @@
+{
+	"name": "Orb",
+	"version": "0.0.0",
+	"description": "https://trello.com/axiorb",
+	"author": "axiverse / http://aaronsun.com",
+
+	"homepage": "https://github.com/Axiverse/Orb",
+	"bugs": {
+		"url": "https://github.com/Axiverse/Orb/issues"
+	},
+
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Axiverse/Orb.git"
+	},
+
+	"main": "index.js",
+	"directories": {
+		"example": "examples",
+		"test": "test"
+	},
+	"scripts": {
+		"test": "mocha --recursive",
+		"start": "grunt --gruntfile utils/gruntfile.js"
+	},
+
+	"private": true
+}

@@ -1,5 +1,5 @@
 
-Orb.GeometryLayer = function ( ) {
+orb.GeometryLayer = function ( ) {
 
 	// create a bufferedgeometry from the geojson.
 	// Index and created a shared geometry/index arraybuffer for all geometry
@@ -13,7 +13,7 @@ Orb.GeometryLayer = function ( ) {
 
 };
 
-Orb.GeometryLayer.prototype = {
+orb.GeometryLayer.prototype = {
 
 
 };

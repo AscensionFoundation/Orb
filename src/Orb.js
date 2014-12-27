@@ -2,4 +2,4 @@
  * @author axiverse / http://axiverse.com
  */
 
- var ORB = ORB || { };
+ var orb = orb || { };

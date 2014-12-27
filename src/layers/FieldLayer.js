@@ -2,7 +2,7 @@
 // move points vased on vector fields
 // kill fading ribbons over time.
 
-Orb.FieldLayer = function () {
+orb.FieldLayer = function () {
 
 	this.lifespan = 1;
 	this.density = 10000;
@@ -16,9 +16,9 @@ Orb.FieldLayer = function () {
 	
 };
 
-Orb.FieldLayer.prototype = {
+orb.FieldLayer.prototype = {
 
-	constructor = Orb.FieldLayer,
+	constructor: orb.FieldLayer,
 
 	update: function () {
 

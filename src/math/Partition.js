@@ -1,4 +1,4 @@
-ORB.Region = function () {
+orb.Region = function () {
 
 	this.positive = [];	// additive areas
 	this.negative = []; // subtractive areas
@@ -7,9 +7,9 @@ ORB.Region = function () {
 
 };
 
-ORB.Region.prototype = {
+orb.Region.prototype = {
 
-	constructor: ORB.Region,
+	constructor: orb.Region,
 
 	computeBounds: function () {
 
@@ -36,16 +36,16 @@ ORB.Region.prototype = {
 }
 
 
-ORB.Partition = function () {
+orb.Partition = function () {
 
 	this.points = [];
 	this.regions = [];
 
 };
 
-ORB.Partition.prototype = {
+orb.Partition.prototype = {
 
-	constructor: ORB.Partition,
+	constructor: orb.Partition,
 
 	add: function ( positioned ) {
 
@@ -53,14 +53,17 @@ ORB.Partition.prototype = {
 		var o = positioned.origin;
 
 		return this;
-	}
+
+	},
 
 	remove: function ( positioned ) {
 
 		return this;
-	}
+
+	},
 
 	nearest: function ( point, number ) {
+		
 		return [];
 
 		// takes points and vectors...

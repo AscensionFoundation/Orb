@@ -11,11 +11,11 @@ orb.Core = function ( domElement ) {
 
 	this.animating = false;
 
-	this.renderer = new THREE.WebGLRenderer( { antialias: false } );
+	this.renderer = new THREE.WebGLRenderer( { antialias: false, logarithmicDepthBuffer: 'logzbuf' } );
 	this.scene = new THREE.Scene();
 	//this.scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
-	this.scene.fog = new THREE.Fog( 0x000000, 100, 300 );
-	this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+	//this.scene.fog = new THREE.Fog( 0x000000, 100, 300 );
+	this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100000000 );
 
 	this.camera.position.z = 300;
 

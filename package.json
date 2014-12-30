@@ -22,7 +22,8 @@
 	"scripts": {
 		"test": "mocha --recursive",
 		"start": "grunt --gruntfile utils/gruntfile.js",
-		"examples": "http-server ./examples"
+		"examples": "http-server ./examples",
+		"watch": "grunt --gruntfile utils/gruntfile.js watch"
 	},
 
 	"devDependencies": {

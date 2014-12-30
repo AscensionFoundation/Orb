@@ -2,16 +2,29 @@
  * @author axiverse / http://axiverse.com
  */
 
-orb.Core = function ( element ) {
+orb.Core = function ( domElement ) {
 
 	// create nested 100% element
 
 	this.layers = [];
 	this.overlays = [];	// overlay objects that get an updated position as the globe spins or moves
 
-	this._renderer = new THREE.WebGlRenderer( element );
-	this._scene = new THREE.Scene();
-	this._camera = new THREE.PerspectiveCamera();
+	this.animating = false;
+
+	this.renderer = new THREE.WebGLRenderer( { antialias: false } );
+	this.scene = new THREE.Scene();
+	//this.scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
+	this.scene.fog = new THREE.Fog( 0x000000, 100, 300 );
+	this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+
+	this.camera.position.z = 300;
+
+
+	var renderer = this.renderer;
+	renderer.setSize( window.innerWidth, window.innerHeight );
+	renderer.setClearColor( 0x111111, 1 );
+
+	this.clock = new THREE.Clock();
 
 	// attach renderer to the specified element
 	// data discovery platform
@@ -22,6 +35,17 @@ orb.Core = function ( element ) {
 	// virtual date
 	// hmm???
 
+	domElement.appendChild( this.renderer.domElement );
+
+	var that = this;
+	window.addEventListener( 'resize', function() {
+
+		that.camera.aspect = window.innerWidth / window.innerHeight;
+		that.camera.updateProjectionMatrix();
+
+		that.renderer.setSize( window.innerWidth, window.innerHeight );
+
+	}, false );
 
 };
 
@@ -47,23 +71,82 @@ orb.Core.prototype = {
 		return Date.now();
 	},
 
+
+
+
+	add: function ( layer ) {
+
+		this.scene.add( layer.scene );
+		this.layers.push(layer);
+
+	},
+
+	remove: function ( layer ) {
+
+		this.scene.remove( layer.scene );
+		var index = this.layers.indexOf(layer);
+
+		if (index > -1) {
+		    this.layers.splice(index, 1);
+		}
+		
+	},
+
 	start: function () {
-		// intro?
+
+		if ( this.animating ) {
+
+			return;
+
+		}
+
+		var that = this;
+		var step = function() {
+
+			if ( that.animating ) {
+
+				requestAnimationFrame( step );
+				that.render();
+
+			}
+
+		};
+
+		this.animating = true;
+		requestAnimationFrame( step );
+
 	},
 
 	stop: function () {
 
+		this.animating = false;
+
 	},
 
 	render: function () {
-		requestAnimcationFrame(render);
+
+		if (orb.trackball != undefined) {
+			orb.trackball.update();
+		}
+
+		var elapsed = this.clock.getElapsedTime();
+		orb.time.update( 0, elapsed * 50 );
 
 		// render loop
 
 		// setup
+		for ( var i = 0; i < this.layers.length; ++i ) {
+
+			this.layers[ i ].onUpdate();
+
+		}
 
 		// render
-		this._renderer.render( this._scene, this._camera );
+		this.renderer.render( this.scene, this.camera );
+
+		if ( stats !== undefined ) { 
+			stats.update();
+		}
 	}
 
 };

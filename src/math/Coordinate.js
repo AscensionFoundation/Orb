@@ -4,16 +4,16 @@
 
 
 // TODO: lat [-90, 90], long [-180, 180]
-orb.Coordiate = function ( latitude, longitude ) {
+orb.Coordinate = function ( latitude, longitude ) {
 
 	this.lat = latitude || 0;
 	this.lng = longitude || 0;
 
 };
 
-orb.Coordiate.prototype = {
+orb.Coordinate.prototype = {
 
-	constructor: orb.Coordiate,
+	constructor: orb.Coordinate,
 
 	set: function( latitude, longitude ) {
 
@@ -37,14 +37,16 @@ orb.Coordiate.prototype = {
 
 	},
 
-	toVector3: function( scale ) {
+	toVector3: function( scale, target ) {
+
+		var vector = target || new THREE.Vector3();
 
 		var scale = scale || 6371;
 
 		var phi = this.lat * ( Math.PI / 180 );
 		var theta = - this.lng * ( Math.PI / 180 );
 
-		return new THREE.Vector3(
+		return vector.set(
 			scale * Math.cos( theta ) * Math.cos( phi ),
 			scale * Math.sin( phi ),
 			scale * Math.sin( theta) * Math.cos( phi ));
@@ -63,7 +65,7 @@ orb.Coordiate.prototype = {
  * Heliocentric ecliptic coordinate system with the sun as the origin and the
  * vernal equinox as the parimary direction
  */
-orb.Coordiate.Ecliptic = function ( latitude, longitude ) {
+orb.Coordinate.Ecliptic = function ( latitude, longitude ) {
 
 	this.origin = orb.galactic.Anchor.Common.Sun;
 	this.primary = "J2000.0";

@@ -10,7 +10,7 @@ module.exports = function( grunt ) {
 				dest:	'../build/Orb.js',
 				//src:	['../src/orb.js', '../src/core/*.js', '../src/**/*.js']
 				src:	[
-					'../src/orb.js',
+					'../src/Orb.js',
 					'../src/core/**/*.js',
 					'../src/**/*.js'
 				]
@@ -19,7 +19,7 @@ module.exports = function( grunt ) {
 
 		uglify: {
 			options: {
-				banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
+				banner: '/*! Orb.js <%= grunt.template.today("dd-mm-yyyy") %> */\n'
 			},
 			build: {
 				dest:	'../build/Orb.min.js',
@@ -30,14 +30,37 @@ module.exports = function( grunt ) {
 
 		watch: {
 			//files: ['<%= jshint.files %>'],
-			files: '<%= concat.build.src %>',
-			tasks: ['concat', 'uglify']
+			files: ['<%= concat.build.src %>', '../src/constants/*', '!../src/constants/Constants.g.js'],
+			tasks: ['filesToJavascript', 'concat', 'uglify', 'copy', 'play:complete']
 		},
 
 		copy: {
 			main: {
 				src: '../build/*',
 				dest: '../examples/orb/'
+			}
+		},
+
+		filesToJavascript: {
+			default_options: {
+				options: {
+					inputFilesFolder : '../src/constants',
+					inputFileExtension : '.var',
+					useIndexes : true,
+					variableIndexMap : {
+					    'vs-' : "'Vertex'",
+					    'fs-' : "'Fragment'",
+					},
+					outputBaseFile : '../src/constants/Constants.g',
+					outputBaseFileVariable : 'orb.Constants',
+					outputFile : '../src/constants/Constants.g.js'
+				}
+			}
+		},
+
+    	play: {
+			complete: {
+				file: './complete.wav'
 			}
 		}
 	});
@@ -46,6 +69,8 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-files-to-javascript-variables');
+	grunt.loadNpmTasks('grunt-play');
 
-	grunt.registerTask('default', ['concat', 'uglify', 'copy']);
+	grunt.registerTask('default', ['filesToJavascript', 'concat', 'uglify', 'copy']);
 };

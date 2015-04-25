@@ -15,7 +15,7 @@ orb.ParticleLayer = function ( markers, texture ) {
 
 	for ( var i = 0; i < markers.length; ++i ) {
 
-		var size = Math.random() * 2 + 0.5;
+		var size = ( markers[i].size || 1 ) / 5;
 		var geometry = new THREE.PlaneBufferGeometry(size, size);
 		var mesh = new THREE.Mesh( geometry, material );
 

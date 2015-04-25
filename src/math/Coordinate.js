@@ -39,14 +39,14 @@ orb.Coordinate.prototype = {
 
 	toVector3: function( scale, target ) {
 
-		var vector = target || new THREE.Vector3();
+		scale = scale || 1.0;
+		target = target || new THREE.Vector3();
 
-		var scale = scale || 6371;
 
 		var phi = this.lat * ( Math.PI / 180 );
 		var theta = - this.lng * ( Math.PI / 180 );
 
-		return vector.set(
+		return target.set(
 			scale * Math.cos( theta ) * Math.cos( phi ),
 			scale * Math.sin( phi ),
 			scale * Math.sin( theta) * Math.cos( phi ));

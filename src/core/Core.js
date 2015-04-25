@@ -11,18 +11,18 @@ orb.Core = function ( domElement ) {
 
 	this.animating = false;
 
-	this.renderer = new THREE.WebGLRenderer( { antialias: false, logarithmicDepthBuffer: 'logzbuf' } );
+	this.renderer = new THREE.WebGLRenderer( { antialias: false /* , logarithmicDepthBuffer: 'logzbuf' */ } );
 	this.scene = new THREE.Scene();
 	//this.scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
 	//this.scene.fog = new THREE.Fog( 0x000000, 100, 300 );
-	this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100000000 );
+	this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000000000000 );
 
 	this.camera.position.z = 300;
 
 
 	var renderer = this.renderer;
 	renderer.setSize( window.innerWidth, window.innerHeight );
-	renderer.setClearColor( 0x111111, 1 );
+	renderer.setClearColor( 0x000000, 1 );
 
 	this.clock = new THREE.Clock();
 
@@ -137,7 +137,7 @@ orb.Core.prototype = {
 		// setup
 		for ( var i = 0; i < this.layers.length; ++i ) {
 
-			this.layers[ i ].onUpdate();
+			this.layers[ i ].onUpdate( elapsed );
 
 		}
 

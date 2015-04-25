@@ -1,3 +1,8 @@
+/**
+ * @author axiverse / http://axiverse.com
+ *
+ * Globe geometry layer
+ */
 
 orb.GeometryLayer = function ( ) {
 
@@ -187,7 +192,9 @@ orb.GeometryLayer = function ( ) {
 		var material = new THREE.ShaderMaterial({
 			uniforms:		uniforms,
 			vertexShader:	orb.Constants.Vertex.Earth,
-			fragmentShader:	orb.Constants.Fragment.Earth
+			fragmentShader:	orb.Constants.Fragment.Earth,
+
+			depthWrite: true,
 		});
 		/*
 		material = new THREE.MeshBasicMaterial({
@@ -216,7 +223,7 @@ orb.GeometryLayer = function ( ) {
 
 			side: THREE.BackSide,
 			transparent: true,
-			depthWrite: false,
+			//depthWrite: false,
 			blending: THREE.AdditiveBlending
 		});
 

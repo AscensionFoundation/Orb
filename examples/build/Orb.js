@@ -17,18 +17,18 @@ orb.Core = function ( domElement ) {
 
 	this.animating = false;
 
-	this.renderer = new THREE.WebGLRenderer( { antialias: false, logarithmicDepthBuffer: 'logzbuf' } );
+	this.renderer = new THREE.WebGLRenderer( { antialias: false /* , logarithmicDepthBuffer: 'logzbuf' */ } );
 	this.scene = new THREE.Scene();
 	//this.scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
 	//this.scene.fog = new THREE.Fog( 0x000000, 100, 300 );
-	this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100000000 );
+	this.camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000000000000 );
 
 	this.camera.position.z = 300;
 
 
 	var renderer = this.renderer;
 	renderer.setSize( window.innerWidth, window.innerHeight );
-	renderer.setClearColor( 0x111111, 1 );
+	renderer.setClearColor( 0x000000, 1 );
 
 	this.clock = new THREE.Clock();
 
@@ -143,7 +143,7 @@ orb.Core.prototype = {
 		// setup
 		for ( var i = 0; i < this.layers.length; ++i ) {
 
-			this.layers[ i ].onUpdate();
+			this.layers[ i ].onUpdate( elapsed );
 
 		}
 
@@ -208,17 +208,23 @@ orb.Constants.BV =
 
 // 
 
-orb.Constants['Fragment'].Earth = '//\n// Atmospheric scattering fragment shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\n//uniform sampler2D s2Tex1;\n//uniform sampler2D s2Tex2;\n\nuniform float fNightScale;\nuniform vec3 v3LightPosition;\nuniform sampler2D tDiffuse;\n//uniform sampler2D tDiffuseNight;\n//uniform sampler2D tClouds;\n\nuniform float fMultiplier;\n\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nvoid main (void)\n{\n	//gl_FragColor = vec4(c0, 1.0);\n	//gl_FragColor = vec4(0.25 * c0, 1.0);\n	//gl_FragColor = gl_Color + texture2D(s2Tex1, gl_TexCoord[0].st) * texture2D(s2Tex2, gl_TexCoord[1].st) * gl_SecondaryColor;\n	float phong = max(dot(normalize(-vNormal), normalize(v3LightPosition)), 0.0);\n\n	vec3 diffuseTex = texture2D( tDiffuse, vUv ).xyz;\n	//vec3 diffuseNightTex = texture2D( tDiffuseNight, vUv ).xyz;\n\n	//diffuseTex = vec3(0.0);\n	//diffuseNightTex = vec3(0.0);\n	//vec3 cloudsTex = texture2D( tClouds, vUv ).xyz;\n\n	//vec3 day = max( diffuseTex, cloudsTex ) * c0;\n	//vec3 night = fNightScale * (0.7 * pow(diffuseNightTex, vec3(3)) + 0.3 * diffuseNightTex) * (1.0 - c0) * phong * (1.0 - cloudsTex);\n\n\n\n	// specular\n	//vec3 r = reflect( -normalize(v3LightPosition), normalize(vNormal) );\n	//float specular =  0.2 * pow(max(dot(r, normalize(cameraPosition)), 0.0), 3.0);\n\n\n\n\n\n	//gl_FragColor = vec4(c1, 1.0) + vec4(day + night, 1.0);\n\n	//gl_FragColor = vec4(fMultiplier * (c1 + day + night), 1.0);\n	gl_FragColor = vec4(c1 + c0 * diffuseTex, 1.0);\n	//gl_FragColor.r += specular;\n\n}';
+orb.Constants['Fragment'].Earth = '//\n// Atmospheric scattering fragment shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\n//uniform sampler2D s2Tex1;\n//uniform sampler2D s2Tex2;\n\nuniform float fNightScale;\nuniform vec3 v3LightPosition;\nuniform sampler2D tDiffuse;\n//uniform sampler2D tDiffuseNight;\n//uniform sampler2D tClouds;\n\nuniform float fMultiplier;\n\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nvoid main (void)\n{\n	//gl_FragColor = vec4(c0, 1.0);\n	//gl_FragColor = vec4(0.25 * c0, 1.0);\n	//gl_FragColor = gl_Color + texture2D(s2Tex1, gl_TexCoord[0].st) * texture2D(s2Tex2, gl_TexCoord[1].st) * gl_SecondaryColor;\n	float phong = max(dot(normalize(-vNormal), normalize(v3LightPosition)), 0.0);\n\n	vec3 diffuseTex = texture2D( tDiffuse, vUv ).xyz;\n	//vec3 diffuseNightTex = texture2D( tDiffuseNight, vUv ).xyz;\n\n	//diffuseTex = vec3(0.0);\n	//diffuseNightTex = vec3(0.0);\n	//vec3 cloudsTex = texture2D( tClouds, vUv ).xyz;\n\n	//vec3 day = max( diffuseTex, cloudsTex ) * c0;\n	//vec3 night = fNightScale * (0.7 * pow(diffuseNightTex, vec3(3)) + 0.3 * diffuseNightTex) * (1.0 - c0) * phong * (1.0 - cloudsTex);\n\n\n\n	// specular\n	//vec3 r = reflect( -normalize(v3LightPosition), normalize(vNormal) );\n	//float specular =  0.2 * pow(max(dot(r, normalize(cameraPosition)), 0.0), 3.0);\n\n\n\n\n\n	//gl_FragColor = vec4(c1, 1.0) + vec4(day + night, 1.0);\n\n	//gl_FragColor = vec4(fMultiplier * (c1 + day + night), 1.0);\n	gl_FragColor = vec4(c1 + c0 * diffuseTex, 1.0);\n	//gl_FragColor.r += specular;\n	//gl_FragColor.rg += vUv.xy;\n\n}';
+
+orb.Constants['Fragment'].RibbonUpdate = '// update the ribbon shader\n\nvarying vec2 vUv;\n\nuniform sampler2D tPositions;\nuniform sampler2D tVelocities;\n\nuniform float delta;\n\nvoid main() {\n\n	vec2 uv = gl_FragCoord.xy / resolution.xy;\n	vec4 data = texture2D( tPosition, uv );\n	vec3 position = data.xy;\n	vec3 velocity = texture3D( tVelocity, position.xy ).xy;\n\n	// x = lng\n	// y = lat\n	gl_FragColor = vec4( position + velocity * delta, 1., 1. );\n\n}';
 
 orb.Constants['Fragment'].Sky = '//\n// Atmospheric scattering fragment shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n\nuniform vec3 v3LightPos;\nuniform float g;\nuniform float g2;\n\nuniform float fMultiplier;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\n\n// Calculates the Mie phase function\nfloat getMiePhase(float fCos, float fCos2, float g, float g2)\n{\n	return 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos2) / pow(1.0 + g2 - 2.0 * g * fCos, 1.5);\n}\n\n// Calculates the Rayleigh phase function\nfloat getRayleighPhase(float fCos2)\n{\n	return 0.75 + 0.75 * fCos2;\n}\n\nvoid main (void)\n{\n	float fCos = dot(v3LightPos, v3Direction) / length(v3Direction);\n	float fCos2 = fCos * fCos;\n\n	vec3 color =	getRayleighPhase(fCos2) * c0 +\n					getMiePhase(fCos, fCos2, g, g2) * c1;\n\n 	gl_FragColor = vec4(fMultiplier * fMultiplier * color, 1.0);\n	gl_FragColor.a = gl_FragColor.b;\n}';
 
-orb.Constants['Fragment'].Stars = 'uniform vec3 color;\nuniform sampler2D texture;\n\nvarying vec3 vColor;\n\nvoid main() {\n\n	gl_FragColor = vec4( color * vColor, 1.0 );\n	gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );\n\n}';
+orb.Constants['Fragment'].Stars = 'uniform vec3 color;\nuniform sampler2D texture;\n\nvarying vec3 vColor;\n\nvoid main() {\n\n	gl_FragColor = vec4( color * vColor, 1.0 );\n	//gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );\n	//gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );\n}';
 
 orb.Constants['Vertex'].Earth = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;		// The direction vector to the light source\nuniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;	// The camera\'s current height\nuniform float fCameraHeight2;	// fCameraHeight^2\nuniform float fOuterRadius;		// The outer (atmosphere) radius\nuniform float fOuterRadius2;	// fOuterRadius^2\nuniform float fInnerRadius;		// The inner (planetary) radius\nuniform float fInnerRadius2;	// fInnerRadius^2\nuniform float fKrESun;			// Kr * ESun\nuniform float fKmESun;			// Km * ESun\nuniform float fKr4PI;			// Kr * 4 * PI\nuniform float fKm4PI;			// Km * 4 * PI\nuniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;	// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n	float x = 1.0 - fCos;\n	return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n	// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n	vec3 v3Ray = position - cameraPosition;\n	float fFar = length(v3Ray);\n	v3Ray /= fFar;\n\n	// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n	float B = 2.0 * dot(cameraPosition, v3Ray);\n	float C = fCameraHeight2 - fOuterRadius2;\n	float fDet = max(0.0, B*B - 4.0 * C);\n	float fNear = 0.5 * (-B - sqrt(fDet));\n\n	// Calculate the ray\'s starting position, then calculate its scattering offset\n	vec3 v3Start = cameraPosition + v3Ray * fNear;\n	fFar -= fNear;\n	float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n	float fCameraAngle = dot(-v3Ray, position) / length(position);\n	float fLightAngle = dot(v3LightPosition, position) / length(position);\n	float fCameraScale = scale(fCameraAngle);\n	float fLightScale = scale(fLightAngle);\n	float fCameraOffset = fDepth*fCameraScale;\n	float fTemp = (fLightScale + fCameraScale);\n\n	// Initialize the scattering loop variables\n	float fSampleLength = fFar / fSamples;\n	float fScaledLength = fSampleLength * fScale;\n	vec3 v3SampleRay = v3Ray * fSampleLength;\n	vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n	// Now loop through the sample rays\n	vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n	vec3 v3Attenuate;\n	for(int i=0; i<nSamples; i++)\n	{\n		float fHeight = length(v3SamplePoint);\n		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n		float fScatter = fDepth*fTemp - fCameraOffset;\n		v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n		v3SamplePoint += v3SampleRay;\n	}\n\n	// Calculate the attenuation factor for the ground\n	c0 = v3Attenuate;\n	c1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n	//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n	//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n	vUv = uv;\n	vNormal = normal;\n}';
 
+orb.Constants['Vertex'].EarthMap = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;		// The direction vector to the light source\nuniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;	// The camera\'s current height\nuniform float fCameraHeight2;	// fCameraHeight^2\nuniform float fOuterRadius;		// The outer (atmosphere) radius\nuniform float fOuterRadius2;	// fOuterRadius^2\nuniform float fInnerRadius;		// The inner (planetary) radius\nuniform float fInnerRadius2;	// fInnerRadius^2\nuniform float fKrESun;			// Kr * ESun\nuniform float fKmESun;			// Km * ESun\nuniform float fKr4PI;			// Kr * 4 * PI\nuniform float fKm4PI;			// Km * 4 * PI\nuniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;	// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n	float x = 1.0 - fCos;\n	return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n	// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n	float theta = (uv.y) * 3.1415;\n	float phi = (uv.x) * 2.0 * 3.1415;\n\n	vec3 v3position = -vec3( fInnerRadius * sin(theta) * cos(phi), fInnerRadius * sin(theta) * sin(phi), fInnerRadius * cos(theta) );\n	vec3 v3camera = 6.0 * v3position;\n	float ffCameraHeight = length(v3camera);\n	float ffCameraHeight2 = ffCameraHeight * ffCameraHeight;\n	vec3 v3Ray = v3position - v3camera;\n	float fFar = length(v3Ray);\n	v3Ray /= fFar;\n\n	// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n	float B = 2.0 * dot(v3camera, v3Ray);\n	float C = ffCameraHeight2 - fOuterRadius2;\n	float fDet = max(0.0, B*B - 4.0 * C);\n	float fNear = 0.5 * (-B - sqrt(fDet));\n\n	// Calculate the ray\'s starting position, then calculate its scattering offset\n	vec3 v3Start = v3camera + v3Ray * fNear;\n	fFar -= fNear;\n	float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n	float fCameraAngle = dot(-v3Ray, v3position) / length(v3position);\n	float fLightAngle = dot(v3LightPosition, v3position) / length(v3position);\n	float fCameraScale = scale(fCameraAngle);\n	float fLightScale = scale(fLightAngle);\n	float fCameraOffset = fDepth*fCameraScale;\n	float fTemp = (fLightScale + fCameraScale);\n\n	// Initialize the scattering loop variables\n	float fSampleLength = fFar / fSamples;\n	float fScaledLength = fSampleLength * fScale;\n	vec3 v3SampleRay = v3Ray * fSampleLength;\n	vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n	// Now loop through the sample rays\n	vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n	vec3 v3Attenuate;\n	for(int i=0; i < nSamples; i++)\n	{\n		float fHeight = length(v3SamplePoint);\n		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n		float fScatter = fDepth*fTemp - fCameraOffset;\n		v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n		v3SamplePoint += v3SampleRay;\n	}\n\n	// Calculate the attenuation factor for the ground\n	c0 = v3Attenuate;\n	c1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n	//c0 = vec3( uv.u, uv.v, 0 );\n\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n	//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n	//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n	vUv = uv;\n	vNormal = normal;\n}';
+
+orb.Constants['Vertex'].RibbonUpdate = 'varying vec2 vUv;\n\nvoid main() {\n\n	vUv = vec2(uv.x, 1.0 - uv.y);\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\n}';
+
 orb.Constants['Vertex'].Sky = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n\nuniform vec3 v3LightPosition;	// The direction vector to the light source\nuniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;	// The camera\'s current height\nuniform float fCameraHeight2;	// fCameraHeight^2\nuniform float fOuterRadius;		// The outer (atmosphere) radius\nuniform float fOuterRadius2;	// fOuterRadius^2\nuniform float fInnerRadius;		// The inner (planetary) radius\nuniform float fInnerRadius2;	// fInnerRadius^2\nuniform float fKrESun;			// Kr * ESun\nuniform float fKmESun;			// Km * ESun\nuniform float fKr4PI;			// Kr * 4 * PI\nuniform float fKm4PI;			// Km * 4 * PI\nuniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;	// fScale / fScaleDepth\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\n\n\nfloat scale(float fCos)\n{\n	float x = 1.0 - fCos;\n	return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n	// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n	vec3 v3Ray = position - cameraPosition;\n	float fFar = length(v3Ray);\n	v3Ray /= fFar;\n\n	// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n	float B = 2.0 * dot(cameraPosition, v3Ray);\n	float C = fCameraHeight2 - fOuterRadius2;\n	float fDet = max(0.0, B*B - 4.0 * C);\n	float fNear = 0.5 * (-B - sqrt(fDet));\n\n	// Calculate the ray\'s starting position, then calculate its scattering offset\n	vec3 v3Start = cameraPosition + v3Ray * fNear;\n	fFar -= fNear;\n	float fStartAngle = dot(v3Ray, v3Start) / fOuterRadius;\n	float fStartDepth = exp(-1.0 / fScaleDepth);\n	float fStartOffset = fStartDepth * scale(fStartAngle);\n	//c0 = vec3(1.0, 0, 0) * fStartAngle;\n\n	// Initialize the scattering loop variables\n	float fSampleLength = fFar / fSamples;\n	float fScaledLength = fSampleLength * fScale;\n	vec3 v3SampleRay = v3Ray * fSampleLength;\n	vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n	//gl_FrontColor = vec4(0.0, 0.0, 0.0, 0.0);\n\n	// Now loop through the sample rays\n	vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n	for(int i=0; i<nSamples; i++)\n	{\n		float fHeight = length(v3SamplePoint);\n		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n		float fLightAngle = dot(v3LightPosition, v3SamplePoint) / fHeight;\n		float fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;\n		float fScatter = (fStartOffset + fDepth * (scale(fLightAngle) - scale(fCameraAngle)));\n		vec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n\n		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n		v3SamplePoint += v3SampleRay;\n	}\n\n	// Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n	c0 = v3FrontColor * (v3InvWavelength * fKrESun);\n	c1 = v3FrontColor * fKmESun;\n	v3Direction = cameraPosition - position;\n}';
 
-orb.Constants['Vertex'].Stars = 'attribute float size;\nattribute vec3 ca;\n\nvarying vec3 vColor;\n\nvoid main() {\n\n	vColor = ca;\n\n	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\n	//gl_PointSize = size;\n	gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\n\n	gl_Position = projectionMatrix * mvPosition;\n\n}';
+orb.Constants['Vertex'].Stars = 'attribute float size;\nattribute vec3 ca;\n\nvarying vec3 vColor;\n\nvoid main() {\n\n	vColor = ca;\n\n	vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\n	//gl_PointSize = size;\n	//gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\n	gl_PointSize = 1.5;\n\n	gl_Position = projectionMatrix * mvPosition;\n\n}';
 
 orb.time = {
 
@@ -262,6 +268,89 @@ orb.time = {
 
 	}
 };
+// ArcGeometry
+// Surface aligned arc geometry.
+
+orb.ArcGeometry = function( from, to, radius ) {
+	
+	THREE.Geometry.call( this );
+
+	// create unit vector
+	var a = from.toVector3();
+	var b = to.toVector3();
+
+	/*
+	var c = new THREE.Vector3();
+
+	var r = new THREE.Quaternion();
+	r.setFromUnitVectors( a, b );
+
+	var q = new THREE.Quaternion();
+	var segments = 50;
+
+	for ( var i = 0; i < segments; ++i ) {
+
+		var v = new THREE.Vector3();
+
+		q.set( 0, 0, 0, 1 );
+		q.slerp( r, i / segments );
+
+		v.copy( uFrom );
+		v.applyQuaternion( q );
+
+	}
+	*/
+
+	var segments = 10;
+	for ( var i = 0; i < segments + 1; ++i ) {
+
+		var p = new THREE.Vector3().copy( a );
+		p.lerp( b, i / segments );
+		p.normalize().multiplyScalar( radius );
+
+		this.vertices.push( p );
+
+	}
+
+};
+
+orb.ArcGeometry.prototype = Object.create( THREE.Geometry.prototype );
+
+orb.RibbonGeometry = function() {
+	
+	THREE.Geometry.call( this );
+
+};
+
+orb.RibbonGeometry.prototype = Object.create( THREE.Geometry.prototype );
+// source, destination arcs
+
+orb.ArcLayer = function ( coordinates ) {
+
+	orb.Layer.call( this );
+
+	var material = new THREE.LineBasicMaterial ({
+
+		color: 0xffffff
+
+	});
+
+	for ( var i = 0; i < coordinates.length; ++i ) {
+
+		var c = coordinates[ i ];
+		var c0 = c[ 0 ];
+		var c1 = c[ 1 ];
+
+		var geometry = new orb.ArcGeometry( c0, c1, 100 );
+		var mesh = new THREE.Line( geometry, material );
+
+		this.scene.add( mesh );
+
+	}
+
+};
+
+orb.ArcLayer.prototype = Object.create( orb.Layer.prototype );
 /**
  * @author axiverse / http://axiverse.com
  */
@@ -288,6 +377,8 @@ orb.AtmosphericOutLayer = function () {
 	// ease out animation layer
 
 };
+// vertical bars out of the earth
+
 orb.BarDataLayer = function ( markers, texture ) {
 
 	var palette = [
@@ -397,6 +488,274 @@ orb.FieldLayer.prototype = {
 	}
 
 };
+/**
+ * @author axiverse / http://axiverse.com
+ *
+ * The globe in a 2D format
+ */
+
+orb.MapLayer = function ( ) {
+
+	orb.Layer.call( this );
+
+	// create a bufferedgeometry from the geojson.
+	// Index and created a shared geometry/index arraybuffer for all geometry
+	
+	// extract metadata objects for each geometry
+	// create structures for efficient mouse/geometry collision
+
+
+	// single line object for all outlines
+	// individual geometrys for each country
+
+	/*
+	var geometry = new THREE.SphereGeometry( 10, 32, 32 );
+	var material = new THREE.MeshBasicMaterial({
+		map: THREE.ImageUtils.loadTexture( 'textures/map-small.jpg' )
+	})
+
+	var mesh = new THREE.Mesh( geometry, material );
+
+	this.scene.add( mesh );
+	*/
+
+	orb.textures = {
+		day: THREE.ImageUtils.loadTexture( 'textures/map-small.jpg' ),
+	}
+
+
+	var u = function(type, value) {
+		return {
+			type: type,
+			value: value
+		};
+	};
+
+	var toBufferGeometry = function( geometry ) {
+
+		var vertices = geometry.vertices;
+		var faces = geometry.faces;
+
+		var triangles = 0;
+		for ( var i = 0; i < faces.length; i ++ ) {
+
+			if ( faces[ i ] instanceof THREE.Face4 ) {
+				triangles = triangles + 2;
+			} else {
+				triangles = triangles + 1;
+			}
+
+		}
+
+		var bufferGeometry = new THREE.BufferGeometry();
+
+		bufferGeometry.attributes = {
+
+			index: {
+				itemSize: 1,
+				array: new Uint16Array( triangles * 3 )
+			},
+			position: {
+				numItems: vertices.length * 3,
+				itemSize: 3,
+				array: new Float32Array( vertices.length * 3 )
+			},
+			normal: {
+				itemSize: 3,
+				array: new Float32Array( vertices.length * 3 )
+			},
+			uv: {
+				itemSize: 2,
+				array: new Float32Array( vertices.length * 2 )
+			}
+
+		};
+
+		var indices = bufferGeometry.attributes.index.array;
+		var positions = bufferGeometry.attributes.position.array;
+		var normals = bufferGeometry.attributes.normal.array;
+		var uv = bufferGeometry.attributes.uv.array;
+
+		var i3 = 0;
+		var n = new THREE.Vector3();
+
+		for ( var i = 0; i < vertices.length; i ++ ) {
+
+			var v = vertices[ i ];
+			n.copy( v ).normalize();
+
+			positions[ i3 + 0 ] = v.x;
+			positions[ i3 + 1 ] = v.y;
+			positions[ i3 + 2 ] = v.z;
+
+			normals[ i3 + 0 ] = n.x;
+			normals[ i3 + 1 ] = n.y;
+			normals[ i3 + 2 ] = n.z;
+
+			i3 += 3;
+
+		}
+
+		i3 = 0;
+		for ( var i = 0; i < faces.length; i ++ ) {
+
+			var face = faces[ i ];
+
+			indices[ i3 + 0 ] = face.a;
+			indices[ i3 + 1 ] = face.b;
+			indices[ i3 + 2 ] = face.c;
+
+			var faceUv = geometry.faceVertexUvs[0][ i ];
+			uv[ face.a * 2 + 0 ] = faceUv[ 0 ].x;
+			uv[ face.a * 2 + 1 ] = faceUv[ 0 ].y;
+			uv[ face.b * 2 + 0 ] = faceUv[ 1 ].x;
+			uv[ face.b * 2 + 1 ] = faceUv[ 1 ].y;
+			uv[ face.c * 2 + 0 ] = faceUv[ 2 ].x;
+			uv[ face.c * 2 + 1 ] = faceUv[ 2 ].y;
+
+			i3 += 3;
+
+			if ( face instanceof THREE.Face4 ) {
+
+				indices[ i3 + 0 ] = face.c;
+				indices[ i3 + 1 ] = face.d;
+				indices[ i3 + 2 ] = face.a;
+
+				i3 += 3;
+
+			}
+
+		}
+
+		var offset = {
+			start: 0,
+			index: 0,
+			count: triangles * 3
+		};
+
+		bufferGeometry.offsets = [ offset ];
+
+		bufferGeometry.computeBoundingSphere();
+
+		return bufferGeometry;
+
+	};
+
+	var atm = orb.Constants.Atmosphere;
+
+	var uniforms = {
+		v3LightPosition			: u( "v3", new THREE.Vector3(1e8, 0, 1e8).normalize() ),
+		v3InvWavelength			: u( "v3", new THREE.Vector3(1 / Math.pow(atm.wavelength[0], 4), 1 / Math.pow(atm.wavelength[1], 4), 1 / Math.pow(atm.wavelength[2], 4)) ),
+		fCameraHeight			: u( "f", 0 ),
+		fCameraHeight2			: u( "f", 0 ),
+		fInnerRadius			: u( "f", atm.innerRadius ),
+		fInnerRadius2			: u( "f", atm.innerRadius * atm.innerRadius ),
+		fOuterRadius			: u( "f", atm.outerRadius ),
+		fOuterRadius2			: u( "f", atm.outerRadius * atm.outerRadius ),
+		fKrESun					: u( "f", atm.Kr * atm.ESun ),
+		fKmESun					: u( "f", atm.Km * atm.ESun ),
+		fKr4PI					: u( "f", atm.Kr * 4.0 * Math.PI ),
+		fKm4PI					: u( "f", atm.Km * 4.0 * Math.PI ),
+		fScale					: u( "f", 1 / ( atm.outerRadius - atm.innerRadius ) ),
+		fScaleDepth				: u( "f", atm.scaleDepth ),
+		fScaleOverScaleDepth	: u( "f", 1 / ( atm.outerRadius - atm.innerRadius ) / atm.scaleDepth ),
+		g						: u( "f", atm.g ),
+		g2						: u( "f", atm.g * atm.g ),
+		nSamples				: u( "i", 3 ),
+		fSamples				: u( "f", 3.0 ),
+		tDiffuse				: u( "t", orb.textures.day ),
+		tDiffuseNight			: u( "t", orb.textures.night ),
+		tClouds					: u( "t", null ),
+		fNightScale				: u( "f", 1 ),
+		fMultiplier				: u( "f", 1 ),
+	};
+
+	{
+		var geometry = new THREE.PlaneGeometry( 200, 100, 100, 50 );
+		//var geometry = new THREE.SphereGeometry( orb.Constants.Atmosphere.innerRadius, 100, 100 );
+		//var geometry = new THREE.SphereGeometry( orb.config.atmosphere.innerRadius, 5, 5, 0, Math.PI, 0, Math.PI/2 );
+		//var geometry = new THREE.WebMercatorGeometry( orb.config.atmosphere.innerRadius, 100, 100 );
+		// geometry = toBufferGeometry( geometry );
+
+		var material = new THREE.ShaderMaterial({
+			uniforms:		uniforms,
+			vertexShader:	orb.Constants.Vertex.EarthMap,
+			fragmentShader:	orb.Constants.Fragment.Earth,
+
+			depthWrite: true,
+		});
+		/*
+		material = new THREE.MeshBasicMaterial({
+			map: THREE.ImageUtils.loadTexture('/debug.jpg')
+		});
+		*/
+		// material.wireframe = true;
+
+		var mesh = new THREE.Mesh( geometry, material );
+		mesh.group = 'globe';
+
+		this.scene.add( mesh );
+
+	};
+
+
+	/*
+	{
+		var geometry = new THREE.SphereGeometry( orb.Constants.Atmosphere.outerRadius, 100, 100 );
+		//geometry = toBufferGeometry( geometry );
+
+		var material = new THREE.ShaderMaterial({
+			uniforms:		uniforms,
+			vertexShader:	orb.Constants.Vertex.Sky,
+			fragmentShader:	orb.Constants.Fragment.Sky,
+
+			side: THREE.BackSide,
+			transparent: true,
+			//depthWrite: false,
+			blending: THREE.AdditiveBlending
+		});
+
+
+
+
+		var mesh = new THREE.Mesh( geometry, material );
+		mesh.group = 'globe';
+
+
+		this.scene.add( mesh );
+	};
+	*/
+
+	var light = new THREE.Vector3( 1, 1, 0 );
+	var euler = new THREE.Euler( 0, 0, 0 );
+	var matrix = new THREE.Matrix4();
+	var camera = 0;
+
+	this.onUpdate = function () {
+
+		camera = orb.core.camera.position.length();
+		//uniforms.v3InvWavelength.value.set(1 / Math.pow(wavelength.red, 4), 1 / Math.pow(wavelength.green, 4), 1 / Math.pow(wavelength.blue, 4) );
+
+		light.set( 1, 0, 0 );
+		light.applyMatrix4( orb.time.matrix );
+		//light.copy( Orb.camera.position ).normalize();
+		//light.copy( Orb.camera.position ).normalize().multiplyScalar( -1 );
+
+		uniforms.v3LightPosition.value = light;
+		uniforms.fCameraHeight.value = camera;
+		uniforms.fCameraHeight2.value = camera * camera;
+
+	};
+};
+
+orb.MapLayer.prototype = Object.create( orb.Layer.prototype );
+
+
+/**
+ * @author axiverse / http://axiverse.com
+ *
+ * Globe geometry layer
+ */
 
 orb.GeometryLayer = function ( ) {
 
@@ -586,7 +945,9 @@ orb.GeometryLayer = function ( ) {
 		var material = new THREE.ShaderMaterial({
 			uniforms:		uniforms,
 			vertexShader:	orb.Constants.Vertex.Earth,
-			fragmentShader:	orb.Constants.Fragment.Earth
+			fragmentShader:	orb.Constants.Fragment.Earth,
+
+			depthWrite: true,
 		});
 		/*
 		material = new THREE.MeshBasicMaterial({
@@ -615,7 +976,7 @@ orb.GeometryLayer = function ( ) {
 
 			side: THREE.BackSide,
 			transparent: true,
-			depthWrite: false,
+			//depthWrite: false,
 			blending: THREE.AdditiveBlending
 		});
 
@@ -669,7 +1030,7 @@ orb.ParticleLayer = function ( markers, texture ) {
 
 	for ( var i = 0; i < markers.length; ++i ) {
 
-		var size = Math.random() * 2 + 0.5;
+		var size = ( markers[i].size || 1 ) / 5;
 		var geometry = new THREE.PlaneBufferGeometry(size, size);
 		var mesh = new THREE.Mesh( geometry, material );
 
@@ -687,24 +1048,183 @@ orb.ParticleLayer = function ( markers, texture ) {
 };
 
 orb.ParticleLayer.prototype = Object.create( orb.Layer.prototype );
+
+orb.RibbonLayer = function() {
+
+	this.cadence;
+	this.offset;
+
+	this.positions = [];
+
+
+	var uniforms = {
+		time: { type: 'f', value: 1.0 },
+		resolution: { type: 'v2', value: new THREE.Vector2( WIDTH, WIDTH )},
+		texture: { type: 't', value: null }
+	};
+
+	this.passThroughShader = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: orb.Constants['Vertex'].PassThrough,
+		fragmentShader: orb.Constants['Fragment'].Shader,
+	});
+
+	this.stepShader = new THREE.ShaderMaterial({
+		uniforms: uniforms,
+		vertexShader: orb.Constants['Vertex'].PassThrough,
+		fragmentShader: orb.Constants['Fragment'].Shader,
+	});
+
+	// 1, 2, 3, 4, 5 -> 1
+
+	/*
+
+	input: velocity map
+
+	update position map.
+
+
+	*/
+
+}
+
+orb.RibbonLayer.prototype = Object.create( orb.Layer.prototype );
+
+orb.RibbonLayer.render = function(position, output, delta) {
+
+
+	renderer.render( scene, camera, output );
+	this.currentPosition = output;
+
+}
+
+/**
+ * Creates a render target
+ */
+orb.RibbonLayer.getRenderTarget = function( format ) {
+
+	var renderTarget = new THREE.WebGLRenderTarget( WIDTH, WIDTH, {
+		wrapS: THREE.RepeatWrapping,
+		wrapT: THREE.RepeatWrapping,
+		minFilter: THREE.NearestFilter,
+		magFilter: THREE.NearestFilter,
+		format: format,
+		type: THREE.FloatType,
+		stencilBuffer: false
+	});
+
+	return renderTarget;
+}
+
+orb.RibbonLayer.generateTexture = function() {
+
+	var a = new Float32Array( PARTICLES * 3 );
+
+	for ( var k = 0, kl = a.length; k < kl; k += 3 ) {
+
+			var x = Math.random() - 0.5;
+			var y = Math.random() - 0.5;
+			var z = Math.random() - 0.5;
+
+			a[ k + 0 ] = x * 10;
+			a[ k + 1 ] = y * 10;
+			a[ k + 2 ] = z * 10;
+
+	}
+
+	var texture = new THREE.DataTexture( a, WIDTH, WIDTH, THREE.RGBFormat, THREE.FloatType );
+	texture.minFilter = THREE.NearestFilter;
+	texture.magFilter = THREE.NearestFilter;
+	texture.needsUpdate = true;
+	texture.flipY = false;
+
+	return texture;
+
+}
+
+orb.RibbonLayer.onUpdate = function() {
+
+	
+
+}
+
+
+
+
+orb.RibbonGeometry = function () {
+
+	THREE.BufferGeometry.call( this );
+
+	var vertices = new THREE.BufferAttribute( new Float32Array( points * 3 ), 3 );
+	// position on the buffer, u, v, time
+	var references = new THREE.BufferAttribute( new Float32Array( points * 3 ), 3 );
+
+	this.addAttribute( 'position', vertices );
+	this.addAttribute( 'reference', referecnes );
+
+
+
+
+}
+
+orb.RibbonGeometry.prototype = Object.create( THREE.BufferGeometry.prototype );
+
+
+
+// star map
+
 orb.SpaceParticleLayer = function ( coordinates ) {
 
 	orb.Layer.call( this );
 
-	var geometry = new THREE.Geometry();
-	var material = new THREE.PointCloudMaterial( {
-		sizeAttenuation: false,
-		color: 0xffffff,
-		size: 1
+	var attributes = {
+
+		size: {	type: 'f', value: [] },
+		ca:   {	type: 'c', value: [] }
+
+	};
+
+	var uniforms = {
+
+		amplitude: { type: "f", value: 1.0 },
+		color:     { type: "c", value: new THREE.Color( 0xffffff ) },
+		texture:   { type: "t", value: THREE.ImageUtils.loadTexture( "textures/sprites/disc.png" ) },
+
+	};
+
+	//uniforms.texture.value.wrapS = uniforms.texture.value.wrapT = THREE.RepeatWrapping;
+
+	var material = new THREE.ShaderMaterial( {
+
+		uniforms:       uniforms,
+		attributes:     attributes,
+		vertexShader:   orb.Constants.Vertex.Stars,
+		fragmentShader: orb.Constants.Fragment.Stars,
+		transparent:    true
+
 	});
 
-	for ( var i = 0; i < coordinates.length; i += 3 ) {
+
+
+	var geometry = new THREE.Geometry();
+	var size = attributes.size.value;
+	var color = attributes.ca.value;
+
+	for ( var i = 0; i < coordinates.length; i += 5 ) {
 
 		var x = coordinates[ i ];
 		var y = coordinates[ i + 1 ];
 		var z = coordinates[ i + 2 ];
+		var ci = coordinates[ i + 3 ];
+		var absmag = coordinates[ i + 4 ];
 
-		geometry.vertices.push( new THREE.Vector3( x, y, z ) );
+
+		var bv = Math.floor(( ci + 0.4 ) / ( 0.4 + 5.46 ) * ( orb.Constants.BV.length ));
+
+		geometry.vertices.push( new THREE.Vector3( x, y, z ).multiplyScalar(1000000) );
+		size.push( absmag );
+		color.push( new THREE.Color( orb.Constants.BV[ bv ] ));
+
 	}
 
 	var cloud = new THREE.PointCloud( geometry, material );
@@ -763,14 +1283,14 @@ orb.Coordinate.prototype = {
 
 	toVector3: function( scale, target ) {
 
-		var vector = target || new THREE.Vector3();
+		scale = scale || 1.0;
+		target = target || new THREE.Vector3();
 
-		var scale = scale || 6371;
 
 		var phi = this.lat * ( Math.PI / 180 );
 		var theta = - this.lng * ( Math.PI / 180 );
 
-		return vector.set(
+		return target.set(
 			scale * Math.cos( theta ) * Math.cos( phi ),
 			scale * Math.sin( phi ),
 			scale * Math.sin( theta) * Math.cos( phi ));

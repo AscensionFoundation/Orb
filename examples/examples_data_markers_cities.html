@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - io blender - vertex colors</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #eee;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+
+				background-color: #000;
+				margin: 0px;
+				padding: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				padding: 5px;
+			}
+
+			a {
+				color: #ffd802;
+			}
+
+		</style>
+		<script src="js/libs/jquery.min.js"></script>
+		<script src="js/libs/three.min.js"></script>
+		<script src="js/libs/three.trackballcontrols.js"></script>
+	</head>
+	<body>
+
+		<div id="container"></div>
+		<div id="info"><a href="http://orbjs.org" target="_blank">orb.js</a> example - shading - atmospheric</div>
+
+
+		<script src="build/orb.js"></script>
+
+		<script src="js/Detector.js"></script>
+		<script src="js/libs/stats.min.js"></script>
+
+		<script>
+
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var core;
+
+			init();
+
+			function init() {
+
+				var container = document.getElementById( 'container' );
+
+				//
+
+				core = new orb.Core( container );
+				core.start();
+
+				core.add( new orb.GeometryLayer() );
+
+				$.getJSON('data/openstreetmaps.cities.json', function( data ) 
+				{
+
+					var cities = [];
+
+					for ( var i = 0; i < data.elements.length; ++i ) {
+
+						var c = data.elements[ i ];
+						var s = Math.max( 1, Math.log10( c.tags.population || 1 ) );
+						//if ( c.tags.population ) {
+
+							cities.push( { lat: c.lat, lng: c.lon, size: s } );
+
+						//}
+
+					}
+			
+
+					console.log( data.elements.length );
+					console.log( cities.length );
+
+					core.add( new orb.ParticleLayer(
+						cities, 
+						'textures/marker.png'
+					));
+
+				});
+
+
+				orb.core = core;
+
+				// trackball
+
+				orb.trackball = new THREE.TrackballControls( core.camera, core.renderer.domElement );
+				orb.trackball.rotateSpeed = 1.0;
+				orb.trackball.zoomSpeed = 1.2;
+				orb.trackball.panSpeed = 0.8;
+				orb.trackball.minDistance = orb.Constants.Atmosphere.outerRadius + core.camera.near + 50 ;
+				orb.trackball.minDistance = orb.Constants.Atmosphere.outerRadius + core.camera.near - 90 ;
+				orb.trackball.maxDistance = 2500;
+				orb.trackball.noZoom = false;
+				orb.trackball.noPan = true;
+				orb.trackball.staticMoving = true;
+				orb.trackball.dynamicDampingFactor = 0.3;
+
+				orb.trackball.keys = [ 65, 83, 68 ];
+
+				//
+
+				stats = new Stats();
+				stats.domElement.style.position = 'absolute';
+				stats.domElement.style.top = '0px';
+				container.appendChild( stats.domElement );
+
+			}
+
+		</script>
+
+	</body>
+</html>

@@ -1,3 +1,5 @@
+// vertical bars out of the earth
+
 orb.BarDataLayer = function ( markers, texture ) {
 
 	var palette = [

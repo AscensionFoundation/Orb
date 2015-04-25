@@ -1,0 +1,21 @@
+// update the ribbon shader
+
+varying vec2 vUv;
+
+uniform sampler2D tPositions;
+uniform sampler2D tVelocities;
+
+uniform float delta;
+
+void main() {
+
+	vec2 uv = gl_FragCoord.xy / resolution.xy;
+	vec4 data = texture2D( tPosition, uv );
+	vec3 position = data.xy;
+	vec3 velocity = texture3D( tVelocity, position.xy ).xy;
+
+	// x = lng
+	// y = lat
+	gl_FragColor = vec4( position + velocity * delta, 1., 1. );
+
+}

@@ -55,5 +55,6 @@ void main (void)
 	//gl_FragColor = vec4(fMultiplier * (c1 + day + night), 1.0);
 	gl_FragColor = vec4(c1 + c0 * diffuseTex, 1.0);
 	//gl_FragColor.r += specular;
+	//gl_FragColor.rg += vUv.xy;
 
 }

@@ -3,7 +3,7 @@
  */
 'use strict';
 
- var orb = orb || { revision: 0 };
+var orb = orb || { revision: 0 };	
 /**
  * @author axiverse / http://axiverse.com
  */
@@ -76,9 +76,6 @@ orb.Core.prototype = {
 
 		return Date.now();
 	},
-
-
-
 
 	add: function ( layer ) {
 
@@ -154,6 +151,26 @@ orb.Core.prototype = {
 			stats.update();
 		}
 	}
+
+};
+/**
+ * @author axiverse / http://axiverse.com
+ */
+
+orb.Global = function ( domElement ) {
+
+
+};
+
+orb.Global.prototype = {
+
+	// time
+
+	// camera
+
+	// user
+
+	// history
 
 };
 /**
@@ -268,6 +285,8 @@ orb.time = {
 
 	}
 };
+
+
 // ArcGeometry
 // Surface aligned arc geometry.
 
@@ -315,6 +334,7 @@ orb.ArcGeometry = function( from, to, radius ) {
 };
 
 orb.ArcGeometry.prototype = Object.create( THREE.Geometry.prototype );
+
 
 orb.RibbonGeometry = function() {
 	

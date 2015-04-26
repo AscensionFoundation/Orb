@@ -5,10 +5,20 @@ module.exports = function( grunt ) {
 	// intitial configuration
 	grunt.initConfig({
 		pkg: grunt.file.readJSON('package.json'),
+
+		babel: {
+	        options: {
+	        },
+	        dist: {
+	            files: {
+	                '../build/Orb5.js': '../build/Orb.js'
+	            }
+	        }
+	    },
+
 		concat: {
 			build: {
 				dest:	'../build/Orb.js',
-				//src:	['../src/orb.js', '../src/core/*.js', '../src/**/*.js']
 				src:	[
 					'../src/Orb.js',
 					'../src/core/**/*.js',
@@ -23,15 +33,14 @@ module.exports = function( grunt ) {
 			},
 			build: {
 				dest:	'../build/Orb.min.js',
-
-				src:	'../build/Orb.js'
+				src:	'../build/Orb5.js'
 			}
 		},
 
 		watch: {
 			//files: ['<%= jshint.files %>'],
 			files: ['<%= concat.build.src %>', '../src/constants/*', '!../src/constants/Constants.g.js'],
-			tasks: ['filesToJavascript', 'concat', 'uglify', 'copy', 'play:complete']
+			tasks: ['filesToJavascript', 'concat', 'babel', 'uglify', 'copy', 'play:complete']
 		},
 
 		copy: {
@@ -71,6 +80,7 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks('grunt-contrib-watch');
 	grunt.loadNpmTasks('grunt-files-to-javascript-variables');
 	grunt.loadNpmTasks('grunt-play');
+	grunt.loadNpmTasks('grunt-babel');
 
-	grunt.registerTask('default', ['filesToJavascript', 'concat', 'uglify', 'copy']);
+	grunt.registerTask('default', ['filesToJavascript', 'concat', 'babel', 'uglify', 'copy']);
 };

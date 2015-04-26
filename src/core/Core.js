@@ -71,9 +71,6 @@ orb.Core.prototype = {
 		return Date.now();
 	},
 
-
-
-
 	add: function ( layer ) {
 
 		this.scene.add( layer.scene );

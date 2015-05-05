@@ -61,11 +61,10 @@
 				core = new orb.Core( container );
 				core.start();
 
+				core.add( new orb.GeometryLayer() );
 
-				
 				$.getJSON('data/google.search.json', function( data ) {
 
-					core.add( new orb.GeometryLayer() );
 					core.add( new orb.BarDataLayer(
 						data
 					));

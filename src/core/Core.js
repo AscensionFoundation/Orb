@@ -24,7 +24,7 @@ orb.Core = function ( domElement ) {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setClearColor( 0x000000, 1 );
 
-	this.clock = new THREE.Clock();
+	this.clock = new orb.Clock();
 
 	// attach renderer to the specified element
 	// data discovery platform
@@ -126,7 +126,7 @@ orb.Core.prototype = {
 			orb.trackball.update();
 		}
 
-		var elapsed = this.clock.getElapsedTime();
+		var elapsed = this.clock.getLocalElapsedTime();
 		orb.time.update( 0, elapsed * 50 );
 
 		// render loop

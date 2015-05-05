@@ -33,14 +33,14 @@ module.exports = function( grunt ) {
 			},
 			build: {
 				dest:	'../build/Orb.min.js',
-				src:	'../build/Orb5.js'
+				src:	'../build/Orb.js'
 			}
 		},
 
 		watch: {
 			//files: ['<%= jshint.files %>'],
 			files: ['<%= concat.build.src %>', '../src/constants/*', '!../src/constants/Constants.g.js'],
-			tasks: ['filesToJavascript', 'concat', 'babel', 'uglify', 'copy', 'play:complete']
+			tasks: ['filesToJavascript', 'concat', /*'babel',*/ 'uglify', 'copy', 'play:complete']
 		},
 
 		copy: {
@@ -62,7 +62,7 @@ module.exports = function( grunt ) {
 					},
 					outputBaseFile : '../src/constants/Constants.g',
 					outputBaseFileVariable : 'orb.Constants',
-					outputFile : '../src/constants/Constants.g.js'
+					outputFile : '../src/constants/Constants.g.js',
 				}
 			}
 		},
@@ -82,5 +82,5 @@ module.exports = function( grunt ) {
 	grunt.loadNpmTasks('grunt-play');
 	grunt.loadNpmTasks('grunt-babel');
 
-	grunt.registerTask('default', ['filesToJavascript', 'concat', 'babel', 'uglify', 'copy']);
+	grunt.registerTask('default', ['filesToJavascript', 'concat', /*'babel',*/ 'uglify', 'copy']);
 };

@@ -11,10 +11,6 @@ orb.AtmosphericLayer = function () {
 
 orb.AtmosphericLayer.prototype = Object.create( orb.Layer.prototype );
 
-
-
-
-
 orb.AtmosphericInLayer = function () {
 	// ease in animation layer
 	// in -> stable -> out

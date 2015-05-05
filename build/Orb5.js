@@ -3,7 +3,84 @@
  */
 'use strict';
 
+/*
+
+Dependencies:
+	moment.js
+
+*/
+
 var orb = orb || { revision: 0 };
+orb.Clock = function () {
+
+	this.startTime = 0;
+	this.oldTime = 0;
+	this.elapsedTime = 0;
+	this.localTime = 0;
+	this.multiplier = 1;
+
+	this.running = false;
+
+	this.frame = {
+
+		dt: 0,
+		delta: 0 };
+};
+
+orb.Clock.prototype = {
+
+	constructor: orb.Clock,
+
+	start: function start() {
+
+		this.startTime = performance !== undefined && performance.now !== undefined ? performance.now() : Date.now();
+
+		this.oldTime = this.startTime;
+		this.localTime = Date.now();
+
+		this.running = true;
+	},
+
+	stop: function stop() {
+
+		this.getElapsedTime();
+		this.running = false;
+	},
+
+	getElapsedTime: function getElapsedTime() {
+
+		this.getDelta();
+		return this.elapsedTime;
+	},
+
+	getLocalTime: function getLocalTime() {
+
+		this.getDelta();
+		return this.localTime;
+	},
+
+	getDelta: function getDelta() {
+
+		var diff = 0;
+
+		if (this.running) {
+
+			var newTime = performance !== undefined && performance.now !== undefined ? performance.now() : Date.now();
+
+			diff = 0.001 * (newTime - this.oldTime);
+			this.oldTime = newTime;
+
+			this.elapsedTime += diff;
+			this.localTime += diff * multiplier;
+		}
+
+		this.frame.dt = diff;
+		this.frame.delta = diff * multiplier;
+
+		return this.frame;
+	}
+
+};
 /**
  * @author axiverse / http://axiverse.com
  */
@@ -97,24 +174,14 @@ orb.Core.prototype = {
 		}
 
 		var that = this;
-		var step = (function (_step) {
-			function step() {
-				return _step.apply(this, arguments);
-			}
-
-			step.toString = function () {
-				return _step.toString();
-			};
-
-			return step;
-		})(function () {
+		var step = function step() {
 
 			if (that.animating) {
 
 				requestAnimationFrame(step);
 				that.render();
 			}
-		});
+		};
 
 		this.animating = true;
 		requestAnimationFrame(step);
@@ -199,23 +266,23 @@ orb.Constants.BV = [10203903, 10401279, 10729983, 11190271, 11716095, 12307711, 
 
 //
 
-orb.Constants.Fragment.Earth = '//\n// Atmospheric scattering fragment shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\n//uniform sampler2D s2Tex1;\n//uniform sampler2D s2Tex2;\n\nuniform float fNightScale;\nuniform vec3 v3LightPosition;\nuniform sampler2D tDiffuse;\n//uniform sampler2D tDiffuseNight;\n//uniform sampler2D tClouds;\n\nuniform float fMultiplier;\n\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nvoid main (void)\n{\n\t//gl_FragColor = vec4(c0, 1.0);\n\t//gl_FragColor = vec4(0.25 * c0, 1.0);\n\t//gl_FragColor = gl_Color + texture2D(s2Tex1, gl_TexCoord[0].st) * texture2D(s2Tex2, gl_TexCoord[1].st) * gl_SecondaryColor;\n\tfloat phong = max(dot(normalize(-vNormal), normalize(v3LightPosition)), 0.0);\n\n\tvec3 diffuseTex = texture2D( tDiffuse, vUv ).xyz;\n\t//vec3 diffuseNightTex = texture2D( tDiffuseNight, vUv ).xyz;\n\n\t//diffuseTex = vec3(0.0);\n\t//diffuseNightTex = vec3(0.0);\n\t//vec3 cloudsTex = texture2D( tClouds, vUv ).xyz;\n\n\t//vec3 day = max( diffuseTex, cloudsTex ) * c0;\n\t//vec3 night = fNightScale * (0.7 * pow(diffuseNightTex, vec3(3)) + 0.3 * diffuseNightTex) * (1.0 - c0) * phong * (1.0 - cloudsTex);\n\n\n\n\t// specular\n\t//vec3 r = reflect( -normalize(v3LightPosition), normalize(vNormal) );\n\t//float specular =  0.2 * pow(max(dot(r, normalize(cameraPosition)), 0.0), 3.0);\n\n\n\n\n\n\t//gl_FragColor = vec4(c1, 1.0) + vec4(day + night, 1.0);\n\n\t//gl_FragColor = vec4(fMultiplier * (c1 + day + night), 1.0);\n\tgl_FragColor = vec4(c1 + c0 * diffuseTex, 1.0);\n\t//gl_FragColor.r += specular;\n\t//gl_FragColor.rg += vUv.xy;\n\n}';
+orb.Constants['Fragment'].Earth = '//// Atmospheric scattering fragment shader//// Author: Sean O&apos;Neil//// Copyright (c) 2004 Sean O&apos;Neil//// Ported for use with three.js/WebGL by James Baicoianu//uniform sampler2D s2Tex1;//uniform sampler2D s2Tex2;uniform float fNightScale;uniform vec3 v3LightPosition;uniform sampler2D tDiffuse;//uniform sampler2D tDiffuseNight;//uniform sampler2D tClouds;uniform float fMultiplier;varying vec3 c0;varying vec3 c1;varying vec3 vNormal;varying vec2 vUv;void main (void){\t//gl_FragColor = vec4(c0, 1.0);\t//gl_FragColor = vec4(0.25 * c0, 1.0);\t//gl_FragColor = gl_Color + texture2D(s2Tex1, gl_TexCoord[0].st) * texture2D(s2Tex2, gl_TexCoord[1].st) * gl_SecondaryColor;\tfloat phong = max(dot(normalize(-vNormal), normalize(v3LightPosition)), 0.0);\tvec3 diffuseTex = texture2D( tDiffuse, vUv ).xyz;\t//vec3 diffuseNightTex = texture2D( tDiffuseNight, vUv ).xyz;\t//diffuseTex = vec3(0.0);\t//diffuseNightTex = vec3(0.0);\t//vec3 cloudsTex = texture2D( tClouds, vUv ).xyz;\t//vec3 day = max( diffuseTex, cloudsTex ) * c0;\t//vec3 night = fNightScale * (0.7 * pow(diffuseNightTex, vec3(3)) + 0.3 * diffuseNightTex) * (1.0 - c0) * phong * (1.0 - cloudsTex);\t// specular\t//vec3 r = reflect( -normalize(v3LightPosition), normalize(vNormal) );\t//float specular =  0.2 * pow(max(dot(r, normalize(cameraPosition)), 0.0), 3.0);\t//gl_FragColor = vec4(c1, 1.0) + vec4(day + night, 1.0);\t//gl_FragColor = vec4(fMultiplier * (c1 + day + night), 1.0);\tgl_FragColor = vec4(c1 + c0 * diffuseTex, 1.0);\t//gl_FragColor.r += specular;\t//gl_FragColor.rg += vUv.xy;}';
 
-orb.Constants.Fragment.RibbonUpdate = '// update the ribbon shader\n\nvarying vec2 vUv;\n\nuniform sampler2D tPositions;\nuniform sampler2D tVelocities;\n\nuniform float delta;\n\nvoid main() {\n\n\tvec2 uv = gl_FragCoord.xy / resolution.xy;\n\tvec4 data = texture2D( tPosition, uv );\n\tvec3 position = data.xy;\n\tvec3 velocity = texture3D( tVelocity, position.xy ).xy;\n\n\t// x = lng\n\t// y = lat\n\tgl_FragColor = vec4( position + velocity * delta, 1., 1. );\n\n}';
+orb.Constants['Fragment'].RibbonUpdate = '// update the ribbon shadervarying vec2 vUv;uniform sampler2D tPositions;uniform sampler2D tVelocities;uniform float delta;void main() {\tvec2 uv = gl_FragCoord.xy / resolution.xy;\tvec4 data = texture2D( tPosition, uv );\tvec3 position = data.xy;\tvec3 velocity = texture3D( tVelocity, position.xy ).xy;\t// x = lng\t// y = lat\tgl_FragColor = vec4( position + velocity * delta, 1., 1. );}';
 
-orb.Constants.Fragment.Sky = '//\n// Atmospheric scattering fragment shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n\nuniform vec3 v3LightPos;\nuniform float g;\nuniform float g2;\n\nuniform float fMultiplier;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\n\n// Calculates the Mie phase function\nfloat getMiePhase(float fCos, float fCos2, float g, float g2)\n{\n\treturn 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos2) / pow(1.0 + g2 - 2.0 * g * fCos, 1.5);\n}\n\n// Calculates the Rayleigh phase function\nfloat getRayleighPhase(float fCos2)\n{\n\treturn 0.75 + 0.75 * fCos2;\n}\n\nvoid main (void)\n{\n\tfloat fCos = dot(v3LightPos, v3Direction) / length(v3Direction);\n\tfloat fCos2 = fCos * fCos;\n\n\tvec3 color =\tgetRayleighPhase(fCos2) * c0 +\n\t\t\t\t\tgetMiePhase(fCos, fCos2, g, g2) * c1;\n\n \tgl_FragColor = vec4(fMultiplier * fMultiplier * color, 1.0);\n\tgl_FragColor.a = gl_FragColor.b;\n}';
+orb.Constants['Fragment'].Sky = '//// Atmospheric scattering fragment shader//// Author: Sean O&apos;Neil//// Copyright (c) 2004 Sean O&apos;Neil//uniform vec3 v3LightPos;uniform float g;uniform float g2;uniform float fMultiplier;varying vec3 v3Direction;varying vec3 c0;varying vec3 c1;// Calculates the Mie phase functionfloat getMiePhase(float fCos, float fCos2, float g, float g2){\treturn 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos2) / pow(1.0 + g2 - 2.0 * g * fCos, 1.5);}// Calculates the Rayleigh phase functionfloat getRayleighPhase(float fCos2){\treturn 0.75 + 0.75 * fCos2;}void main (void){\tfloat fCos = dot(v3LightPos, v3Direction) / length(v3Direction);\tfloat fCos2 = fCos * fCos;\tvec3 color =\tgetRayleighPhase(fCos2) * c0 +\t\t\t\t\tgetMiePhase(fCos, fCos2, g, g2) * c1; \tgl_FragColor = vec4(fMultiplier * fMultiplier * color, 1.0);\tgl_FragColor.a = gl_FragColor.b;}';
 
-orb.Constants.Fragment.Stars = 'uniform vec3 color;\nuniform sampler2D texture;\n\nvarying vec3 vColor;\n\nvoid main() {\n\n\tgl_FragColor = vec4( color * vColor, 1.0 );\n\t//gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );\n\t//gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );\n}';
+orb.Constants['Fragment'].Stars = 'uniform vec3 color;uniform sampler2D texture;varying vec3 vColor;void main() {\tgl_FragColor = vec4( color * vColor, 1.0 );\t//gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );\t//gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );}';
 
-orb.Constants.Vertex.Earth = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;\t\t// The direction vector to the light source\nuniform vec3 v3InvWavelength;\t// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;\t// The camera\'s current height\nuniform float fCameraHeight2;\t// fCameraHeight^2\nuniform float fOuterRadius;\t\t// The outer (atmosphere) radius\nuniform float fOuterRadius2;\t// fOuterRadius^2\nuniform float fInnerRadius;\t\t// The inner (planetary) radius\nuniform float fInnerRadius2;\t// fInnerRadius^2\nuniform float fKrESun;\t\t\t// Kr * ESun\nuniform float fKmESun;\t\t\t// Km * ESun\nuniform float fKr4PI;\t\t\t// Kr * 4 * PI\nuniform float fKm4PI;\t\t\t// Km * 4 * PI\nuniform float fScale;\t\t\t// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;\t\t// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;\t// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n\tfloat x = 1.0 - fCos;\n\treturn fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n\t// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n\tvec3 v3Ray = position - cameraPosition;\n\tfloat fFar = length(v3Ray);\n\tv3Ray /= fFar;\n\n\t// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n\tfloat B = 2.0 * dot(cameraPosition, v3Ray);\n\tfloat C = fCameraHeight2 - fOuterRadius2;\n\tfloat fDet = max(0.0, B*B - 4.0 * C);\n\tfloat fNear = 0.5 * (-B - sqrt(fDet));\n\n\t// Calculate the ray\'s starting position, then calculate its scattering offset\n\tvec3 v3Start = cameraPosition + v3Ray * fNear;\n\tfFar -= fNear;\n\tfloat fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n\tfloat fCameraAngle = dot(-v3Ray, position) / length(position);\n\tfloat fLightAngle = dot(v3LightPosition, position) / length(position);\n\tfloat fCameraScale = scale(fCameraAngle);\n\tfloat fLightScale = scale(fLightAngle);\n\tfloat fCameraOffset = fDepth*fCameraScale;\n\tfloat fTemp = (fLightScale + fCameraScale);\n\n\t// Initialize the scattering loop variables\n\tfloat fSampleLength = fFar / fSamples;\n\tfloat fScaledLength = fSampleLength * fScale;\n\tvec3 v3SampleRay = v3Ray * fSampleLength;\n\tvec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n\t// Now loop through the sample rays\n\tvec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n\tvec3 v3Attenuate;\n\tfor(int i=0; i<nSamples; i++)\n\t{\n\t\tfloat fHeight = length(v3SamplePoint);\n\t\tfloat fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n\t\tfloat fScatter = fDepth*fTemp - fCameraOffset;\n\t\tv3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n\t\tv3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n\t\tv3SamplePoint += v3SampleRay;\n\t}\n\n\t// Calculate the attenuation factor for the ground\n\tc0 = v3Attenuate;\n\tc1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n\t//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n\tvUv = uv;\n\tvNormal = normal;\n}';
+orb.Constants['Vertex'].Earth = '//// Atmospheric scattering vertex shader//// Author: Sean O&apos;Neil//// Copyright (c) 2004 Sean O&apos;Neil//// Ported for use with three.js/WebGL by James Baicoianuuniform vec3 v3LightPosition;\t\t// The direction vector to the light sourceuniform vec3 v3InvWavelength;\t// 1 / pow(wavelength, 4) for the red, green, and blue channelsuniform float fCameraHeight;\t// The camera&apos;s current heightuniform float fCameraHeight2;\t// fCameraHeight^2uniform float fOuterRadius;\t\t// The outer (atmosphere) radiusuniform float fOuterRadius2;\t// fOuterRadius^2uniform float fInnerRadius;\t\t// The inner (planetary) radiusuniform float fInnerRadius2;\t// fInnerRadius^2uniform float fKrESun;\t\t\t// Kr * ESununiform float fKmESun;\t\t\t// Km * ESununiform float fKr4PI;\t\t\t// Kr * 4 * PIuniform float fKm4PI;\t\t\t// Km * 4 * PIuniform float fScale;\t\t\t// 1 / (fOuterRadius - fInnerRadius)uniform float fScaleDepth;\t\t// The scale depth (i.e. the altitude at which the atmosphere&apos;s average density is found)uniform float fScaleOverScaleDepth;\t// fScale / fScaleDepthuniform sampler2D tDiffuse;varying vec3 v3Direction;varying vec3 c0;varying vec3 c1;varying vec3 vNormal;varying vec2 vUv;const int nSamples = 3;const float fSamples = 3.0;float scale(float fCos){\tfloat x = 1.0 - fCos;\treturn fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));}void main(void){\t// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\tvec3 v3Ray = position - cameraPosition;\tfloat fFar = length(v3Ray);\tv3Ray /= fFar;\t// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\tfloat B = 2.0 * dot(cameraPosition, v3Ray);\tfloat C = fCameraHeight2 - fOuterRadius2;\tfloat fDet = max(0.0, B*B - 4.0 * C);\tfloat fNear = 0.5 * (-B - sqrt(fDet));\t// Calculate the ray&apos;s starting position, then calculate its scattering offset\tvec3 v3Start = cameraPosition + v3Ray * fNear;\tfFar -= fNear;\tfloat fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\tfloat fCameraAngle = dot(-v3Ray, position) / length(position);\tfloat fLightAngle = dot(v3LightPosition, position) / length(position);\tfloat fCameraScale = scale(fCameraAngle);\tfloat fLightScale = scale(fLightAngle);\tfloat fCameraOffset = fDepth*fCameraScale;\tfloat fTemp = (fLightScale + fCameraScale);\t// Initialize the scattering loop variables\tfloat fSampleLength = fFar / fSamples;\tfloat fScaledLength = fSampleLength * fScale;\tvec3 v3SampleRay = v3Ray * fSampleLength;\tvec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\t// Now loop through the sample rays\tvec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\tvec3 v3Attenuate;\tfor(int i=0; i<nSamples; i++)\t{\t\tfloat fHeight = length(v3SamplePoint);\t\tfloat fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\t\tfloat fScatter = fDepth*fTemp - fCameraOffset;\t\tv3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\t\tv3FrontColor += v3Attenuate * (fDepth * fScaledLength);\t\tv3SamplePoint += v3SampleRay;\t}\t// Calculate the attenuation factor for the ground\tc0 = v3Attenuate;\tc1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\t//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\t//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\tvUv = uv;\tvNormal = normal;}';
 
-orb.Constants.Vertex.EarthMap = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;\t\t// The direction vector to the light source\nuniform vec3 v3InvWavelength;\t// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;\t// The camera\'s current height\nuniform float fCameraHeight2;\t// fCameraHeight^2\nuniform float fOuterRadius;\t\t// The outer (atmosphere) radius\nuniform float fOuterRadius2;\t// fOuterRadius^2\nuniform float fInnerRadius;\t\t// The inner (planetary) radius\nuniform float fInnerRadius2;\t// fInnerRadius^2\nuniform float fKrESun;\t\t\t// Kr * ESun\nuniform float fKmESun;\t\t\t// Km * ESun\nuniform float fKr4PI;\t\t\t// Kr * 4 * PI\nuniform float fKm4PI;\t\t\t// Km * 4 * PI\nuniform float fScale;\t\t\t// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;\t\t// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;\t// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n\tfloat x = 1.0 - fCos;\n\treturn fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n\t// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n\tfloat theta = (uv.y) * 3.1415;\n\tfloat phi = (uv.x) * 2.0 * 3.1415;\n\n\tvec3 v3position = -vec3( fInnerRadius * sin(theta) * cos(phi), fInnerRadius * sin(theta) * sin(phi), fInnerRadius * cos(theta) );\n\tvec3 v3camera = 6.0 * v3position;\n\tfloat ffCameraHeight = length(v3camera);\n\tfloat ffCameraHeight2 = ffCameraHeight * ffCameraHeight;\n\tvec3 v3Ray = v3position - v3camera;\n\tfloat fFar = length(v3Ray);\n\tv3Ray /= fFar;\n\n\t// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n\tfloat B = 2.0 * dot(v3camera, v3Ray);\n\tfloat C = ffCameraHeight2 - fOuterRadius2;\n\tfloat fDet = max(0.0, B*B - 4.0 * C);\n\tfloat fNear = 0.5 * (-B - sqrt(fDet));\n\n\t// Calculate the ray\'s starting position, then calculate its scattering offset\n\tvec3 v3Start = v3camera + v3Ray * fNear;\n\tfFar -= fNear;\n\tfloat fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n\tfloat fCameraAngle = dot(-v3Ray, v3position) / length(v3position);\n\tfloat fLightAngle = dot(v3LightPosition, v3position) / length(v3position);\n\tfloat fCameraScale = scale(fCameraAngle);\n\tfloat fLightScale = scale(fLightAngle);\n\tfloat fCameraOffset = fDepth*fCameraScale;\n\tfloat fTemp = (fLightScale + fCameraScale);\n\n\t// Initialize the scattering loop variables\n\tfloat fSampleLength = fFar / fSamples;\n\tfloat fScaledLength = fSampleLength * fScale;\n\tvec3 v3SampleRay = v3Ray * fSampleLength;\n\tvec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n\t// Now loop through the sample rays\n\tvec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n\tvec3 v3Attenuate;\n\tfor(int i=0; i < nSamples; i++)\n\t{\n\t\tfloat fHeight = length(v3SamplePoint);\n\t\tfloat fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n\t\tfloat fScatter = fDepth*fTemp - fCameraOffset;\n\t\tv3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n\t\tv3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n\t\tv3SamplePoint += v3SampleRay;\n\t}\n\n\t// Calculate the attenuation factor for the ground\n\tc0 = v3Attenuate;\n\tc1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n\t//c0 = vec3( uv.u, uv.v, 0 );\n\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\t//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n\t//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n\tvUv = uv;\n\tvNormal = normal;\n}';
+orb.Constants['Vertex'].EarthMap = '//// Atmospheric scattering vertex shader//// Author: Sean O&apos;Neil//// Copyright (c) 2004 Sean O&apos;Neil//// Ported for use with three.js/WebGL by James Baicoianuuniform vec3 v3LightPosition;\t\t// The direction vector to the light sourceuniform vec3 v3InvWavelength;\t// 1 / pow(wavelength, 4) for the red, green, and blue channelsuniform float fCameraHeight;\t// The camera&apos;s current heightuniform float fCameraHeight2;\t// fCameraHeight^2uniform float fOuterRadius;\t\t// The outer (atmosphere) radiusuniform float fOuterRadius2;\t// fOuterRadius^2uniform float fInnerRadius;\t\t// The inner (planetary) radiusuniform float fInnerRadius2;\t// fInnerRadius^2uniform float fKrESun;\t\t\t// Kr * ESununiform float fKmESun;\t\t\t// Km * ESununiform float fKr4PI;\t\t\t// Kr * 4 * PIuniform float fKm4PI;\t\t\t// Km * 4 * PIuniform float fScale;\t\t\t// 1 / (fOuterRadius - fInnerRadius)uniform float fScaleDepth;\t\t// The scale depth (i.e. the altitude at which the atmosphere&apos;s average density is found)uniform float fScaleOverScaleDepth;\t// fScale / fScaleDepthuniform sampler2D tDiffuse;varying vec3 v3Direction;varying vec3 c0;varying vec3 c1;varying vec3 vNormal;varying vec2 vUv;const int nSamples = 3;const float fSamples = 3.0;float scale(float fCos){\tfloat x = 1.0 - fCos;\treturn fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));}void main(void){\t// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\tfloat theta = (uv.y) * 3.1415;\tfloat phi = (uv.x) * 2.0 * 3.1415;\tvec3 v3position = -vec3( fInnerRadius * sin(theta) * cos(phi), fInnerRadius * sin(theta) * sin(phi), fInnerRadius * cos(theta) );\tvec3 v3camera = 6.0 * v3position;\tfloat ffCameraHeight = length(v3camera);\tfloat ffCameraHeight2 = ffCameraHeight * ffCameraHeight;\tvec3 v3Ray = v3position - v3camera;\tfloat fFar = length(v3Ray);\tv3Ray /= fFar;\t// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\tfloat B = 2.0 * dot(v3camera, v3Ray);\tfloat C = ffCameraHeight2 - fOuterRadius2;\tfloat fDet = max(0.0, B*B - 4.0 * C);\tfloat fNear = 0.5 * (-B - sqrt(fDet));\t// Calculate the ray&apos;s starting position, then calculate its scattering offset\tvec3 v3Start = v3camera + v3Ray * fNear;\tfFar -= fNear;\tfloat fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\tfloat fCameraAngle = dot(-v3Ray, v3position) / length(v3position);\tfloat fLightAngle = dot(v3LightPosition, v3position) / length(v3position);\tfloat fCameraScale = scale(fCameraAngle);\tfloat fLightScale = scale(fLightAngle);\tfloat fCameraOffset = fDepth*fCameraScale;\tfloat fTemp = (fLightScale + fCameraScale);\t// Initialize the scattering loop variables\tfloat fSampleLength = fFar / fSamples;\tfloat fScaledLength = fSampleLength * fScale;\tvec3 v3SampleRay = v3Ray * fSampleLength;\tvec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\t// Now loop through the sample rays\tvec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\tvec3 v3Attenuate;\tfor(int i=0; i < nSamples; i++)\t{\t\tfloat fHeight = length(v3SamplePoint);\t\tfloat fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\t\tfloat fScatter = fDepth*fTemp - fCameraOffset;\t\tv3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\t\tv3FrontColor += v3Attenuate * (fDepth * fScaledLength);\t\tv3SamplePoint += v3SampleRay;\t}\t// Calculate the attenuation factor for the ground\tc0 = v3Attenuate;\tc1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\t//c0 = vec3( uv.u, uv.v, 0 );\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\t//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\t//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\tvUv = uv;\tvNormal = normal;}';
 
-orb.Constants.Vertex.RibbonUpdate = 'varying vec2 vUv;\n\nvoid main() {\n\n\tvUv = vec2(uv.x, 1.0 - uv.y);\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\n}';
+orb.Constants['Vertex'].RibbonUpdate = 'varying vec2 vUv;void main() {\tvUv = vec2(uv.x, 1.0 - uv.y);\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );}';
 
-orb.Constants.Vertex.Sky = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n\nuniform vec3 v3LightPosition;\t// The direction vector to the light source\nuniform vec3 v3InvWavelength;\t// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;\t// The camera\'s current height\nuniform float fCameraHeight2;\t// fCameraHeight^2\nuniform float fOuterRadius;\t\t// The outer (atmosphere) radius\nuniform float fOuterRadius2;\t// fOuterRadius^2\nuniform float fInnerRadius;\t\t// The inner (planetary) radius\nuniform float fInnerRadius2;\t// fInnerRadius^2\nuniform float fKrESun;\t\t\t// Kr * ESun\nuniform float fKmESun;\t\t\t// Km * ESun\nuniform float fKr4PI;\t\t\t// Kr * 4 * PI\nuniform float fKm4PI;\t\t\t// Km * 4 * PI\nuniform float fScale;\t\t\t// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;\t\t// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;\t// fScale / fScaleDepth\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\n\n\nfloat scale(float fCos)\n{\n\tfloat x = 1.0 - fCos;\n\treturn fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n\t// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n\tvec3 v3Ray = position - cameraPosition;\n\tfloat fFar = length(v3Ray);\n\tv3Ray /= fFar;\n\n\t// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n\tfloat B = 2.0 * dot(cameraPosition, v3Ray);\n\tfloat C = fCameraHeight2 - fOuterRadius2;\n\tfloat fDet = max(0.0, B*B - 4.0 * C);\n\tfloat fNear = 0.5 * (-B - sqrt(fDet));\n\n\t// Calculate the ray\'s starting position, then calculate its scattering offset\n\tvec3 v3Start = cameraPosition + v3Ray * fNear;\n\tfFar -= fNear;\n\tfloat fStartAngle = dot(v3Ray, v3Start) / fOuterRadius;\n\tfloat fStartDepth = exp(-1.0 / fScaleDepth);\n\tfloat fStartOffset = fStartDepth * scale(fStartAngle);\n\t//c0 = vec3(1.0, 0, 0) * fStartAngle;\n\n\t// Initialize the scattering loop variables\n\tfloat fSampleLength = fFar / fSamples;\n\tfloat fScaledLength = fSampleLength * fScale;\n\tvec3 v3SampleRay = v3Ray * fSampleLength;\n\tvec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n\t//gl_FrontColor = vec4(0.0, 0.0, 0.0, 0.0);\n\n\t// Now loop through the sample rays\n\tvec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n\tfor(int i=0; i<nSamples; i++)\n\t{\n\t\tfloat fHeight = length(v3SamplePoint);\n\t\tfloat fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n\t\tfloat fLightAngle = dot(v3LightPosition, v3SamplePoint) / fHeight;\n\t\tfloat fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;\n\t\tfloat fScatter = (fStartOffset + fDepth * (scale(fLightAngle) - scale(fCameraAngle)));\n\t\tvec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n\n\t\tv3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n\t\tv3SamplePoint += v3SampleRay;\n\t}\n\n\t// Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\tc0 = v3FrontColor * (v3InvWavelength * fKrESun);\n\tc1 = v3FrontColor * fKmESun;\n\tv3Direction = cameraPosition - position;\n}';
+orb.Constants['Vertex'].Sky = '//// Atmospheric scattering vertex shader//// Author: Sean O&apos;Neil//// Copyright (c) 2004 Sean O&apos;Neil//uniform vec3 v3LightPosition;\t// The direction vector to the light sourceuniform vec3 v3InvWavelength;\t// 1 / pow(wavelength, 4) for the red, green, and blue channelsuniform float fCameraHeight;\t// The camera&apos;s current heightuniform float fCameraHeight2;\t// fCameraHeight^2uniform float fOuterRadius;\t\t// The outer (atmosphere) radiusuniform float fOuterRadius2;\t// fOuterRadius^2uniform float fInnerRadius;\t\t// The inner (planetary) radiusuniform float fInnerRadius2;\t// fInnerRadius^2uniform float fKrESun;\t\t\t// Kr * ESununiform float fKmESun;\t\t\t// Km * ESununiform float fKr4PI;\t\t\t// Kr * 4 * PIuniform float fKm4PI;\t\t\t// Km * 4 * PIuniform float fScale;\t\t\t// 1 / (fOuterRadius - fInnerRadius)uniform float fScaleDepth;\t\t// The scale depth (i.e. the altitude at which the atmosphere&apos;s average density is found)uniform float fScaleOverScaleDepth;\t// fScale / fScaleDepthconst int nSamples = 3;const float fSamples = 3.0;varying vec3 v3Direction;varying vec3 c0;varying vec3 c1;float scale(float fCos){\tfloat x = 1.0 - fCos;\treturn fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));}void main(void){\t// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\tvec3 v3Ray = position - cameraPosition;\tfloat fFar = length(v3Ray);\tv3Ray /= fFar;\t// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\tfloat B = 2.0 * dot(cameraPosition, v3Ray);\tfloat C = fCameraHeight2 - fOuterRadius2;\tfloat fDet = max(0.0, B*B - 4.0 * C);\tfloat fNear = 0.5 * (-B - sqrt(fDet));\t// Calculate the ray&apos;s starting position, then calculate its scattering offset\tvec3 v3Start = cameraPosition + v3Ray * fNear;\tfFar -= fNear;\tfloat fStartAngle = dot(v3Ray, v3Start) / fOuterRadius;\tfloat fStartDepth = exp(-1.0 / fScaleDepth);\tfloat fStartOffset = fStartDepth * scale(fStartAngle);\t//c0 = vec3(1.0, 0, 0) * fStartAngle;\t// Initialize the scattering loop variables\tfloat fSampleLength = fFar / fSamples;\tfloat fScaledLength = fSampleLength * fScale;\tvec3 v3SampleRay = v3Ray * fSampleLength;\tvec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\t//gl_FrontColor = vec4(0.0, 0.0, 0.0, 0.0);\t// Now loop through the sample rays\tvec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\tfor(int i=0; i<nSamples; i++)\t{\t\tfloat fHeight = length(v3SamplePoint);\t\tfloat fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\t\tfloat fLightAngle = dot(v3LightPosition, v3SamplePoint) / fHeight;\t\tfloat fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;\t\tfloat fScatter = (fStartOffset + fDepth * (scale(fLightAngle) - scale(fCameraAngle)));\t\tvec3 v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\t\tv3FrontColor += v3Attenuate * (fDepth * fScaledLength);\t\tv3SamplePoint += v3SampleRay;\t}\t// Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\tc0 = v3FrontColor * (v3InvWavelength * fKrESun);\tc1 = v3FrontColor * fKmESun;\tv3Direction = cameraPosition - position;}';
 
-orb.Constants.Vertex.Stars = 'attribute float size;\nattribute vec3 ca;\n\nvarying vec3 vColor;\n\nvoid main() {\n\n\tvColor = ca;\n\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\n\t//gl_PointSize = size;\n\t//gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\n\tgl_PointSize = 1.5;\n\n\tgl_Position = projectionMatrix * mvPosition;\n\n}';
+orb.Constants['Vertex'].Stars = 'attribute float size;attribute vec3 ca;varying vec3 vColor;void main() {\tvColor = ca;\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\t//gl_PointSize = size;\t//gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\tgl_PointSize = 1.5;\tgl_Position = projectionMatrix * mvPosition;}';
 
 orb.time = {
 
@@ -887,7 +954,7 @@ orb.GeometryLayer = function () {
 		var mesh = new THREE.Mesh(geometry, material);
 		mesh.group = 'globe';
 
-		this.scene.add(mesh);
+		//this.scene.add( mesh );
 	};
 
 	var light = new THREE.Vector3(1, 1, 0);
@@ -959,13 +1026,13 @@ orb.RibbonLayer = function () {
 
 	this.passThroughShader = new THREE.ShaderMaterial({
 		uniforms: uniforms,
-		vertexShader: orb.Constants.Vertex.PassThrough,
-		fragmentShader: orb.Constants.Fragment.Shader });
+		vertexShader: orb.Constants['Vertex'].PassThrough,
+		fragmentShader: orb.Constants['Fragment'].Shader });
 
 	this.stepShader = new THREE.ShaderMaterial({
 		uniforms: uniforms,
-		vertexShader: orb.Constants.Vertex.PassThrough,
-		fragmentShader: orb.Constants.Fragment.Shader });
+		vertexShader: orb.Constants['Vertex'].PassThrough,
+		fragmentShader: orb.Constants['Fragment'].Shader });
 
 	// 1, 2, 3, 4, 5 -> 1
 

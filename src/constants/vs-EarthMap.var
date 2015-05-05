@@ -24,7 +24,6 @@ uniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the a
 uniform float fScaleOverScaleDepth;	// fScale / fScaleDepth
 uniform sampler2D tDiffuse;
 
-varying vec3 v3Direction;
 varying vec3 c0;
 varying vec3 c1;
 varying vec3 vNormal;

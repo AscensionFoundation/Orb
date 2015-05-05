@@ -3,7 +3,120 @@
  */
 'use strict';
 
+/*
+
+Dependencies:
+	moment.js
+
+*/
+
 var orb = orb || { revision: 0 };	
+/**
+ * @author axiverse / http://axiverse.com
+ */
+ 
+orb.Clock = function( autoStart ) {
+
+	this.autoStart = ( autoStart !== undefined ) ? autoStart : true;
+
+	this.startTime = 0;
+	this.oldTime = 0;
+	this.elapsedTime = 0;
+	this.localTime = 0;
+	this.localElapsedTime = 0;
+	this.multiplier = 1;
+	this.running = false;
+
+	this.frame = {
+
+		diff: 0,
+		delta: 0,
+
+	}
+};
+
+orb.Clock.prototype = {
+
+	constructor: orb.Clock,
+
+	start: function() {
+
+		this.startTime = performance !== undefined && performance.now !== undefined
+					 ? performance.now()
+					 : Date.now();
+
+		this.oldTime = this.startTime;
+		this.localTime = Date.now();
+
+		this.running = true;
+
+	},
+
+	stop: function() {
+
+		this.getElapsedTime();
+		this.running = false;
+
+	},
+
+	getElapsedTime: function () {
+
+		this.getDelta();
+		return this.elapsedTime;
+
+	},
+
+	getLocalElapsedTime: function () {
+
+		this.getDelta();
+		return this.localElapsedTime;
+
+	},
+
+	getLocalTime: function() {
+
+		this.getDelta();
+		return this.localTime;
+
+	},
+
+	getDelta: function() {
+
+		var diff = 0;
+		var delta = 0;
+
+		if ( this.autoStart && ! this.running ) {
+
+			this.start();
+
+		}
+
+		if ( this.running ) {
+
+			var newTime = performance !== undefined && performance.now !== undefined
+					 ? performance.now()
+					 : Date.now();
+
+			diff = 0.001 * ( newTime - this.oldTime );
+			delta = diff * this.multiplier;
+
+			this.oldTime = newTime;
+
+			this.elapsedTime += diff;
+
+			this.localTime += delta;
+			this.localElapsedTime += delta;
+
+		}
+
+		this.frame.diff = diff;
+		this.frame.delta = delta;
+
+		return this.frame;
+
+	}
+
+}
 /**
  * @author axiverse / http://axiverse.com
  */
@@ -30,7 +143,7 @@ orb.Core = function ( domElement ) {
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	renderer.setClearColor( 0x000000, 1 );
 
-	this.clock = new THREE.Clock();
+	this.clock = new orb.Clock();
 
 	// attach renderer to the specified element
 	// data discovery platform
@@ -132,7 +245,7 @@ orb.Core.prototype = {
 			orb.trackball.update();
 		}
 
-		var elapsed = this.clock.getElapsedTime();
+		var elapsed = this.clock.getLocalElapsedTime();
 		orb.time.update( 0, elapsed * 50 );
 
 		// render loop
@@ -233,9 +346,9 @@ orb.Constants['Fragment'].Sky = '//\n// Atmospheric scattering fragment shader\n
 
 orb.Constants['Fragment'].Stars = 'uniform vec3 color;\nuniform sampler2D texture;\n\nvarying vec3 vColor;\n\nvoid main() {\n\n	gl_FragColor = vec4( color * vColor, 1.0 );\n	//gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );\n	//gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );\n}';
 
-orb.Constants['Vertex'].Earth = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;		// The direction vector to the light source\nuniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;	// The camera\'s current height\nuniform float fCameraHeight2;	// fCameraHeight^2\nuniform float fOuterRadius;		// The outer (atmosphere) radius\nuniform float fOuterRadius2;	// fOuterRadius^2\nuniform float fInnerRadius;		// The inner (planetary) radius\nuniform float fInnerRadius2;	// fInnerRadius^2\nuniform float fKrESun;			// Kr * ESun\nuniform float fKmESun;			// Km * ESun\nuniform float fKr4PI;			// Kr * 4 * PI\nuniform float fKm4PI;			// Km * 4 * PI\nuniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;	// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n	float x = 1.0 - fCos;\n	return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n	// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n	vec3 v3Ray = position - cameraPosition;\n	float fFar = length(v3Ray);\n	v3Ray /= fFar;\n\n	// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n	float B = 2.0 * dot(cameraPosition, v3Ray);\n	float C = fCameraHeight2 - fOuterRadius2;\n	float fDet = max(0.0, B*B - 4.0 * C);\n	float fNear = 0.5 * (-B - sqrt(fDet));\n\n	// Calculate the ray\'s starting position, then calculate its scattering offset\n	vec3 v3Start = cameraPosition + v3Ray * fNear;\n	fFar -= fNear;\n	float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n	float fCameraAngle = dot(-v3Ray, position) / length(position);\n	float fLightAngle = dot(v3LightPosition, position) / length(position);\n	float fCameraScale = scale(fCameraAngle);\n	float fLightScale = scale(fLightAngle);\n	float fCameraOffset = fDepth*fCameraScale;\n	float fTemp = (fLightScale + fCameraScale);\n\n	// Initialize the scattering loop variables\n	float fSampleLength = fFar / fSamples;\n	float fScaledLength = fSampleLength * fScale;\n	vec3 v3SampleRay = v3Ray * fSampleLength;\n	vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n	// Now loop through the sample rays\n	vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n	vec3 v3Attenuate;\n	for(int i=0; i<nSamples; i++)\n	{\n		float fHeight = length(v3SamplePoint);\n		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n		float fScatter = fDepth*fTemp - fCameraOffset;\n		v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n		v3SamplePoint += v3SampleRay;\n	}\n\n	// Calculate the attenuation factor for the ground\n	c0 = v3Attenuate;\n	c1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n	//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n	//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n	vUv = uv;\n	vNormal = normal;\n}';
+orb.Constants['Vertex'].Earth = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;		// The direction vector to the light source\nuniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;	// The camera\'s current height\nuniform float fCameraHeight2;	// fCameraHeight^2\nuniform float fOuterRadius;		// The outer (atmosphere) radius\nuniform float fOuterRadius2;	// fOuterRadius^2\nuniform float fInnerRadius;		// The inner (planetary) radius\nuniform float fInnerRadius2;	// fInnerRadius^2\nuniform float fKrESun;			// Kr * ESun\nuniform float fKmESun;			// Km * ESun\nuniform float fKr4PI;			// Kr * 4 * PI\nuniform float fKm4PI;			// Km * 4 * PI\nuniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;	// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n	float x = 1.0 - fCos;\n	return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n	// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n	vec3 v3Ray = position - cameraPosition;\n	float fFar = length(v3Ray);\n	v3Ray /= fFar;\n\n	// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n	float B = 2.0 * dot(cameraPosition, v3Ray);\n	float C = fCameraHeight2 - fOuterRadius2;\n	float fDet = max(0.0, B*B - 4.0 * C);\n	float fNear = 0.5 * (-B - sqrt(fDet));\n\n	// Calculate the ray\'s starting position, then calculate its scattering offset\n	vec3 v3Start = cameraPosition + v3Ray * fNear;\n	fFar -= fNear;\n	float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n	float fCameraAngle = dot(-v3Ray, position) / length(position);\n	float fLightAngle = dot(v3LightPosition, position) / length(position);\n	float fCameraScale = scale(fCameraAngle);\n	float fLightScale = scale(fLightAngle);\n	float fCameraOffset = fDepth*fCameraScale;\n	float fTemp = (fLightScale + fCameraScale);\n\n	// Initialize the scattering loop variables\n	float fSampleLength = fFar / fSamples;\n	float fScaledLength = fSampleLength * fScale;\n	vec3 v3SampleRay = v3Ray * fSampleLength;\n	vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n	// Now loop through the sample rays\n	vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n	vec3 v3Attenuate;\n	for(int i=0; i<nSamples; i++)\n	{\n		float fHeight = length(v3SamplePoint);\n		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n		float fScatter = fDepth*fTemp - fCameraOffset;\n		v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n		v3SamplePoint += v3SampleRay;\n	}\n\n	// Calculate the attenuation factor for the ground\n	c0 = v3Attenuate;\n	c1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n	//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n	//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n	vUv = uv;\n	vNormal = normal;\n}';
 
-orb.Constants['Vertex'].EarthMap = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;		// The direction vector to the light source\nuniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;	// The camera\'s current height\nuniform float fCameraHeight2;	// fCameraHeight^2\nuniform float fOuterRadius;		// The outer (atmosphere) radius\nuniform float fOuterRadius2;	// fOuterRadius^2\nuniform float fInnerRadius;		// The inner (planetary) radius\nuniform float fInnerRadius2;	// fInnerRadius^2\nuniform float fKrESun;			// Kr * ESun\nuniform float fKmESun;			// Km * ESun\nuniform float fKr4PI;			// Kr * 4 * PI\nuniform float fKm4PI;			// Km * 4 * PI\nuniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;	// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 v3Direction;\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n	float x = 1.0 - fCos;\n	return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n	// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n	float theta = (uv.y) * 3.1415;\n	float phi = (uv.x) * 2.0 * 3.1415;\n\n	vec3 v3position = -vec3( fInnerRadius * sin(theta) * cos(phi), fInnerRadius * sin(theta) * sin(phi), fInnerRadius * cos(theta) );\n	vec3 v3camera = 6.0 * v3position;\n	float ffCameraHeight = length(v3camera);\n	float ffCameraHeight2 = ffCameraHeight * ffCameraHeight;\n	vec3 v3Ray = v3position - v3camera;\n	float fFar = length(v3Ray);\n	v3Ray /= fFar;\n\n	// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n	float B = 2.0 * dot(v3camera, v3Ray);\n	float C = ffCameraHeight2 - fOuterRadius2;\n	float fDet = max(0.0, B*B - 4.0 * C);\n	float fNear = 0.5 * (-B - sqrt(fDet));\n\n	// Calculate the ray\'s starting position, then calculate its scattering offset\n	vec3 v3Start = v3camera + v3Ray * fNear;\n	fFar -= fNear;\n	float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n	float fCameraAngle = dot(-v3Ray, v3position) / length(v3position);\n	float fLightAngle = dot(v3LightPosition, v3position) / length(v3position);\n	float fCameraScale = scale(fCameraAngle);\n	float fLightScale = scale(fLightAngle);\n	float fCameraOffset = fDepth*fCameraScale;\n	float fTemp = (fLightScale + fCameraScale);\n\n	// Initialize the scattering loop variables\n	float fSampleLength = fFar / fSamples;\n	float fScaledLength = fSampleLength * fScale;\n	vec3 v3SampleRay = v3Ray * fSampleLength;\n	vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n	// Now loop through the sample rays\n	vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n	vec3 v3Attenuate;\n	for(int i=0; i < nSamples; i++)\n	{\n		float fHeight = length(v3SamplePoint);\n		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n		float fScatter = fDepth*fTemp - fCameraOffset;\n		v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n		v3SamplePoint += v3SampleRay;\n	}\n\n	// Calculate the attenuation factor for the ground\n	c0 = v3Attenuate;\n	c1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n	//c0 = vec3( uv.u, uv.v, 0 );\n\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n	//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n	//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n	vUv = uv;\n	vNormal = normal;\n}';
+orb.Constants['Vertex'].EarthMap = '//\n// Atmospheric scattering vertex shader\n//\n// Author: Sean O\'Neil\n//\n// Copyright (c) 2004 Sean O\'Neil\n//\n// Ported for use with three.js/WebGL by James Baicoianu\n\nuniform vec3 v3LightPosition;		// The direction vector to the light source\nuniform vec3 v3InvWavelength;	// 1 / pow(wavelength, 4) for the red, green, and blue channels\nuniform float fCameraHeight;	// The camera\'s current height\nuniform float fCameraHeight2;	// fCameraHeight^2\nuniform float fOuterRadius;		// The outer (atmosphere) radius\nuniform float fOuterRadius2;	// fOuterRadius^2\nuniform float fInnerRadius;		// The inner (planetary) radius\nuniform float fInnerRadius2;	// fInnerRadius^2\nuniform float fKrESun;			// Kr * ESun\nuniform float fKmESun;			// Km * ESun\nuniform float fKr4PI;			// Kr * 4 * PI\nuniform float fKm4PI;			// Km * 4 * PI\nuniform float fScale;			// 1 / (fOuterRadius - fInnerRadius)\nuniform float fScaleDepth;		// The scale depth (i.e. the altitude at which the atmosphere\'s average density is found)\nuniform float fScaleOverScaleDepth;	// fScale / fScaleDepth\nuniform sampler2D tDiffuse;\n\nvarying vec3 c0;\nvarying vec3 c1;\nvarying vec3 vNormal;\nvarying vec2 vUv;\n\nconst int nSamples = 3;\nconst float fSamples = 3.0;\n\nfloat scale(float fCos)\n{\n	float x = 1.0 - fCos;\n	return fScaleDepth * exp(-0.00287 + x*(0.459 + x*(3.83 + x*(-6.80 + x*5.25))));\n}\n\nvoid main(void)\n{\n	// Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)\n	float theta = (uv.y) * 3.1415;\n	float phi = (uv.x) * 2.0 * 3.1415;\n\n	vec3 v3position = -vec3( fInnerRadius * sin(theta) * cos(phi), fInnerRadius * sin(theta) * sin(phi), fInnerRadius * cos(theta) );\n	vec3 v3camera = 6.0 * v3position;\n	float ffCameraHeight = length(v3camera);\n	float ffCameraHeight2 = ffCameraHeight * ffCameraHeight;\n	vec3 v3Ray = v3position - v3camera;\n	float fFar = length(v3Ray);\n	v3Ray /= fFar;\n\n	// Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)\n	float B = 2.0 * dot(v3camera, v3Ray);\n	float C = ffCameraHeight2 - fOuterRadius2;\n	float fDet = max(0.0, B*B - 4.0 * C);\n	float fNear = 0.5 * (-B - sqrt(fDet));\n\n	// Calculate the ray\'s starting position, then calculate its scattering offset\n	vec3 v3Start = v3camera + v3Ray * fNear;\n	fFar -= fNear;\n	float fDepth = exp((fInnerRadius - fOuterRadius) / fScaleDepth);\n	float fCameraAngle = dot(-v3Ray, v3position) / length(v3position);\n	float fLightAngle = dot(v3LightPosition, v3position) / length(v3position);\n	float fCameraScale = scale(fCameraAngle);\n	float fLightScale = scale(fLightAngle);\n	float fCameraOffset = fDepth*fCameraScale;\n	float fTemp = (fLightScale + fCameraScale);\n\n	// Initialize the scattering loop variables\n	float fSampleLength = fFar / fSamples;\n	float fScaledLength = fSampleLength * fScale;\n	vec3 v3SampleRay = v3Ray * fSampleLength;\n	vec3 v3SamplePoint = v3Start + v3SampleRay * 0.5;\n\n	// Now loop through the sample rays\n	vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);\n	vec3 v3Attenuate;\n	for(int i=0; i < nSamples; i++)\n	{\n		float fHeight = length(v3SamplePoint);\n		float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));\n		float fScatter = fDepth*fTemp - fCameraOffset;\n		v3Attenuate = exp(-fScatter * (v3InvWavelength * fKr4PI + fKm4PI));\n		v3FrontColor += v3Attenuate * (fDepth * fScaledLength);\n		v3SamplePoint += v3SampleRay;\n	}\n\n	// Calculate the attenuation factor for the ground\n	c0 = v3Attenuate;\n	c1 = v3FrontColor * (v3InvWavelength * fKrESun + fKmESun);\n	//c0 = vec3( uv.u, uv.v, 0 );\n\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n	//gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n	//gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n	vUv = uv;\n	vNormal = normal;\n}';
 
 orb.Constants['Vertex'].RibbonUpdate = 'varying vec2 vUv;\n\nvoid main() {\n\n	vUv = vec2(uv.x, 1.0 - uv.y);\n	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\n}';
 
@@ -384,10 +497,6 @@ orb.AtmosphericLayer = function () {
 
 orb.AtmosphericLayer.prototype = Object.create( orb.Layer.prototype );
 
-
-
-
-
 orb.AtmosphericInLayer = function () {
 	// ease in animation layer
 	// in -> stable -> out
@@ -518,31 +627,9 @@ orb.MapLayer = function ( ) {
 
 	orb.Layer.call( this );
 
-	// create a bufferedgeometry from the geojson.
-	// Index and created a shared geometry/index arraybuffer for all geometry
-	
-	// extract metadata objects for each geometry
-	// create structures for efficient mouse/geometry collision
-
-
-	// single line object for all outlines
-	// individual geometrys for each country
-
-	/*
-	var geometry = new THREE.SphereGeometry( 10, 32, 32 );
-	var material = new THREE.MeshBasicMaterial({
-		map: THREE.ImageUtils.loadTexture( 'textures/map-small.jpg' )
-	})
-
-	var mesh = new THREE.Mesh( geometry, material );
-
-	this.scene.add( mesh );
-	*/
-
 	orb.textures = {
 		day: THREE.ImageUtils.loadTexture( 'textures/map-small.jpg' ),
 	}
-
 
 	var u = function(type, value) {
 		return {
@@ -551,119 +638,10 @@ orb.MapLayer = function ( ) {
 		};
 	};
 
-	var toBufferGeometry = function( geometry ) {
-
-		var vertices = geometry.vertices;
-		var faces = geometry.faces;
-
-		var triangles = 0;
-		for ( var i = 0; i < faces.length; i ++ ) {
-
-			if ( faces[ i ] instanceof THREE.Face4 ) {
-				triangles = triangles + 2;
-			} else {
-				triangles = triangles + 1;
-			}
-
-		}
-
-		var bufferGeometry = new THREE.BufferGeometry();
-
-		bufferGeometry.attributes = {
-
-			index: {
-				itemSize: 1,
-				array: new Uint16Array( triangles * 3 )
-			},
-			position: {
-				numItems: vertices.length * 3,
-				itemSize: 3,
-				array: new Float32Array( vertices.length * 3 )
-			},
-			normal: {
-				itemSize: 3,
-				array: new Float32Array( vertices.length * 3 )
-			},
-			uv: {
-				itemSize: 2,
-				array: new Float32Array( vertices.length * 2 )
-			}
-
-		};
-
-		var indices = bufferGeometry.attributes.index.array;
-		var positions = bufferGeometry.attributes.position.array;
-		var normals = bufferGeometry.attributes.normal.array;
-		var uv = bufferGeometry.attributes.uv.array;
-
-		var i3 = 0;
-		var n = new THREE.Vector3();
-
-		for ( var i = 0; i < vertices.length; i ++ ) {
-
-			var v = vertices[ i ];
-			n.copy( v ).normalize();
-
-			positions[ i3 + 0 ] = v.x;
-			positions[ i3 + 1 ] = v.y;
-			positions[ i3 + 2 ] = v.z;
-
-			normals[ i3 + 0 ] = n.x;
-			normals[ i3 + 1 ] = n.y;
-			normals[ i3 + 2 ] = n.z;
-
-			i3 += 3;
-
-		}
-
-		i3 = 0;
-		for ( var i = 0; i < faces.length; i ++ ) {
-
-			var face = faces[ i ];
-
-			indices[ i3 + 0 ] = face.a;
-			indices[ i3 + 1 ] = face.b;
-			indices[ i3 + 2 ] = face.c;
-
-			var faceUv = geometry.faceVertexUvs[0][ i ];
-			uv[ face.a * 2 + 0 ] = faceUv[ 0 ].x;
-			uv[ face.a * 2 + 1 ] = faceUv[ 0 ].y;
-			uv[ face.b * 2 + 0 ] = faceUv[ 1 ].x;
-			uv[ face.b * 2 + 1 ] = faceUv[ 1 ].y;
-			uv[ face.c * 2 + 0 ] = faceUv[ 2 ].x;
-			uv[ face.c * 2 + 1 ] = faceUv[ 2 ].y;
-
-			i3 += 3;
-
-			if ( face instanceof THREE.Face4 ) {
-
-				indices[ i3 + 0 ] = face.c;
-				indices[ i3 + 1 ] = face.d;
-				indices[ i3 + 2 ] = face.a;
-
-				i3 += 3;
-
-			}
-
-		}
-
-		var offset = {
-			start: 0,
-			index: 0,
-			count: triangles * 3
-		};
-
-		bufferGeometry.offsets = [ offset ];
-
-		bufferGeometry.computeBoundingSphere();
-
-		return bufferGeometry;
-
-	};
-
 	var atm = orb.Constants.Atmosphere;
 
 	var uniforms = {
+
 		v3LightPosition			: u( "v3", new THREE.Vector3(1e8, 0, 1e8).normalize() ),
 		v3InvWavelength			: u( "v3", new THREE.Vector3(1 / Math.pow(atm.wavelength[0], 4), 1 / Math.pow(atm.wavelength[1], 4), 1 / Math.pow(atm.wavelength[2], 4)) ),
 		fCameraHeight			: u( "f", 0 ),
@@ -688,14 +666,11 @@ orb.MapLayer = function ( ) {
 		tClouds					: u( "t", null ),
 		fNightScale				: u( "f", 1 ),
 		fMultiplier				: u( "f", 1 ),
+
 	};
 
 	{
-		var geometry = new THREE.PlaneGeometry( 200, 100, 100, 50 );
-		//var geometry = new THREE.SphereGeometry( orb.Constants.Atmosphere.innerRadius, 100, 100 );
-		//var geometry = new THREE.SphereGeometry( orb.config.atmosphere.innerRadius, 5, 5, 0, Math.PI, 0, Math.PI/2 );
-		//var geometry = new THREE.WebMercatorGeometry( orb.config.atmosphere.innerRadius, 100, 100 );
-		// geometry = toBufferGeometry( geometry );
+		var geometry = new THREE.PlaneBufferGeometry( 200, 100, 100, 50 );
 
 		var material = new THREE.ShaderMaterial({
 			uniforms:		uniforms,
@@ -704,12 +679,6 @@ orb.MapLayer = function ( ) {
 
 			depthWrite: true,
 		});
-		/*
-		material = new THREE.MeshBasicMaterial({
-			map: THREE.ImageUtils.loadTexture('/debug.jpg')
-		});
-		*/
-		// material.wireframe = true;
 
 		var mesh = new THREE.Mesh( geometry, material );
 		mesh.group = 'globe';
@@ -717,34 +686,6 @@ orb.MapLayer = function ( ) {
 		this.scene.add( mesh );
 
 	};
-
-
-	/*
-	{
-		var geometry = new THREE.SphereGeometry( orb.Constants.Atmosphere.outerRadius, 100, 100 );
-		//geometry = toBufferGeometry( geometry );
-
-		var material = new THREE.ShaderMaterial({
-			uniforms:		uniforms,
-			vertexShader:	orb.Constants.Vertex.Sky,
-			fragmentShader:	orb.Constants.Fragment.Sky,
-
-			side: THREE.BackSide,
-			transparent: true,
-			//depthWrite: false,
-			blending: THREE.AdditiveBlending
-		});
-
-
-
-
-		var mesh = new THREE.Mesh( geometry, material );
-		mesh.group = 'globe';
-
-
-		this.scene.add( mesh );
-	};
-	*/
 
 	var light = new THREE.Vector3( 1, 1, 0 );
 	var euler = new THREE.Euler( 0, 0, 0 );
@@ -754,12 +695,9 @@ orb.MapLayer = function ( ) {
 	this.onUpdate = function () {
 
 		camera = orb.core.camera.position.length();
-		//uniforms.v3InvWavelength.value.set(1 / Math.pow(wavelength.red, 4), 1 / Math.pow(wavelength.green, 4), 1 / Math.pow(wavelength.blue, 4) );
 
 		light.set( 1, 0, 0 );
 		light.applyMatrix4( orb.time.matrix );
-		//light.copy( Orb.camera.position ).normalize();
-		//light.copy( Orb.camera.position ).normalize().multiplyScalar( -1 );
 
 		uniforms.v3LightPosition.value = light;
 		uniforms.fCameraHeight.value = camera;
@@ -781,150 +719,15 @@ orb.GeometryLayer = function ( ) {
 
 	orb.Layer.call( this );
 
-	// create a bufferedgeometry from the geojson.
-	// Index and created a shared geometry/index arraybuffer for all geometry
-	
-	// extract metadata objects for each geometry
-	// create structures for efficient mouse/geometry collision
-
-
-	// single line object for all outlines
-	// individual geometrys for each country
-
-	/*
-	var geometry = new THREE.SphereGeometry( 10, 32, 32 );
-	var material = new THREE.MeshBasicMaterial({
-		map: THREE.ImageUtils.loadTexture( 'textures/map-small.jpg' )
-	})
-
-	var mesh = new THREE.Mesh( geometry, material );
-
-	this.scene.add( mesh );
-	*/
-
-
-
-
 	orb.textures = {
 		day: THREE.ImageUtils.loadTexture( 'textures/map-small.jpg' ),
 	}
-
 
 	var u = function(type, value) {
 		return {
 			type: type,
 			value: value
 		};
-	};
-
-	var toBufferGeometry = function( geometry ) {
-
-		var vertices = geometry.vertices;
-		var faces = geometry.faces;
-
-		var triangles = 0;
-		for ( var i = 0; i < faces.length; i ++ ) {
-
-			if ( faces[ i ] instanceof THREE.Face4 ) {
-				triangles = triangles + 2;
-			} else {
-				triangles = triangles + 1;
-			}
-
-		}
-
-		var bufferGeometry = new THREE.BufferGeometry();
-
-		bufferGeometry.attributes = {
-
-			index: {
-				itemSize: 1,
-				array: new Uint16Array( triangles * 3 )
-			},
-			position: {
-				numItems: vertices.length * 3,
-				itemSize: 3,
-				array: new Float32Array( vertices.length * 3 )
-			},
-			normal: {
-				itemSize: 3,
-				array: new Float32Array( vertices.length * 3 )
-			},
-			uv: {
-				itemSize: 2,
-				array: new Float32Array( vertices.length * 2 )
-			}
-
-		};
-
-		var indices = bufferGeometry.attributes.index.array;
-		var positions = bufferGeometry.attributes.position.array;
-		var normals = bufferGeometry.attributes.normal.array;
-		var uv = bufferGeometry.attributes.uv.array;
-
-		var i3 = 0;
-		var n = new THREE.Vector3();
-
-		for ( var i = 0; i < vertices.length; i ++ ) {
-
-			var v = vertices[ i ];
-			n.copy( v ).normalize();
-
-			positions[ i3 + 0 ] = v.x;
-			positions[ i3 + 1 ] = v.y;
-			positions[ i3 + 2 ] = v.z;
-
-			normals[ i3 + 0 ] = n.x;
-			normals[ i3 + 1 ] = n.y;
-			normals[ i3 + 2 ] = n.z;
-
-			i3 += 3;
-
-		}
-
-		i3 = 0;
-		for ( var i = 0; i < faces.length; i ++ ) {
-
-			var face = faces[ i ];
-
-			indices[ i3 + 0 ] = face.a;
-			indices[ i3 + 1 ] = face.b;
-			indices[ i3 + 2 ] = face.c;
-
-			var faceUv = geometry.faceVertexUvs[0][ i ];
-			uv[ face.a * 2 + 0 ] = faceUv[ 0 ].x;
-			uv[ face.a * 2 + 1 ] = faceUv[ 0 ].y;
-			uv[ face.b * 2 + 0 ] = faceUv[ 1 ].x;
-			uv[ face.b * 2 + 1 ] = faceUv[ 1 ].y;
-			uv[ face.c * 2 + 0 ] = faceUv[ 2 ].x;
-			uv[ face.c * 2 + 1 ] = faceUv[ 2 ].y;
-
-			i3 += 3;
-
-			if ( face instanceof THREE.Face4 ) {
-
-				indices[ i3 + 0 ] = face.c;
-				indices[ i3 + 1 ] = face.d;
-				indices[ i3 + 2 ] = face.a;
-
-				i3 += 3;
-
-			}
-
-		}
-
-		var offset = {
-			start: 0,
-			index: 0,
-			count: triangles * 3
-		};
-
-		bufferGeometry.offsets = [ offset ];
-
-		bufferGeometry.computeBoundingSphere();
-
-		return bufferGeometry;
-
 	};
 
 	var atm = orb.Constants.Atmosphere;
@@ -956,11 +759,10 @@ orb.GeometryLayer = function ( ) {
 		fMultiplier				: u( "f", 1 ),
 	};
 
+	// create terrain geometry
 	{
 		var geometry = new THREE.SphereGeometry( orb.Constants.Atmosphere.innerRadius, 100, 100 );
-		//var geometry = new THREE.SphereGeometry( orb.config.atmosphere.innerRadius, 5, 5, 0, Math.PI, 0, Math.PI/2 );
-		//var geometry = new THREE.WebMercatorGeometry( orb.config.atmosphere.innerRadius, 100, 100 );
-		// geometry = toBufferGeometry( geometry );
+		geometry = new THREE.BufferGeometry().fromGeometry( geometry );
 
 		var material = new THREE.ShaderMaterial({
 			uniforms:		uniforms,
@@ -969,12 +771,6 @@ orb.GeometryLayer = function ( ) {
 
 			depthWrite: true,
 		});
-		/*
-		material = new THREE.MeshBasicMaterial({
-			map: THREE.ImageUtils.loadTexture('/debug.jpg')
-		});
-		*/
-		// material.wireframe = true;
 
 		var mesh = new THREE.Mesh( geometry, material );
 		mesh.group = 'globe';
@@ -983,11 +779,10 @@ orb.GeometryLayer = function ( ) {
 
 	};
 
-
-
+	// create sky geometry
 	{
 		var geometry = new THREE.SphereGeometry( orb.Constants.Atmosphere.outerRadius, 100, 100 );
-		//geometry = toBufferGeometry( geometry );
+		geometry = new THREE.BufferGeometry().fromGeometry( geometry );
 
 		var material = new THREE.ShaderMaterial({
 			uniforms:		uniforms,
@@ -1000,12 +795,8 @@ orb.GeometryLayer = function ( ) {
 			blending: THREE.AdditiveBlending
 		});
 
-
-
-
 		var mesh = new THREE.Mesh( geometry, material );
 		mesh.group = 'globe';
-
 
 		this.scene.add( mesh );
 	};
@@ -1018,7 +809,6 @@ orb.GeometryLayer = function ( ) {
 	this.onUpdate = function () {
 
 		camera = orb.core.camera.position.length();
-		//uniforms.v3InvWavelength.value.set(1 / Math.pow(wavelength.red, 4), 1 / Math.pow(wavelength.green, 4), 1 / Math.pow(wavelength.blue, 4) );
 
 		light.set( 1, 0, 0 );
 		light.applyMatrix4( orb.time.matrix );

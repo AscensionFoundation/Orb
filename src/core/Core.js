@@ -45,6 +45,10 @@ orb.Core = function ( domElement ) {
 
 		that.renderer.setSize( window.innerWidth, window.innerHeight );
 
+		if (orb.trackball != undefined) {
+			orb.trackball.handleResize();
+		}
+
 	}, false );
 
 };

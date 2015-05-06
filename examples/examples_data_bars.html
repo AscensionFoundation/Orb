@@ -78,12 +78,13 @@
 
 				// trackball
 
-				orb.trackball = new THREE.TrackballControls( core.camera, core.renderer.domElement );
+				orb.trackball = new orb.GlobeControls( core.camera, core.renderer.domElement );
 				orb.trackball.rotateSpeed = 1.0;
 				orb.trackball.zoomSpeed = 1.2;
 				orb.trackball.panSpeed = 0.8;
-				orb.trackball.minDistance = orb.Constants.Atmosphere.outerRadius + core.camera.near + 50 ;
-				orb.trackball.minDistance = orb.Constants.Atmosphere.outerRadius + core.camera.near - 90 ;
+				orb.trackball.baseDistance = orb.Constants.Atmosphere.innerRadius;
+				orb.trackball.minDistance = orb.Constants.Atmosphere.innerRadius + core.camera.near;
+				//orb.trackball.minDistance = orb.Constants.Atmosphere.outerRadius + core.camera.near - 90 ;
 				orb.trackball.maxDistance = 2500;
 				orb.trackball.noZoom = false;
 				orb.trackball.noPan = true;

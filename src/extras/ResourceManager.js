@@ -1,0 +1,13 @@
+/*
+
+Extends all resource classes to have reference counting.
+
+Loads or prefetches all resources through the code. When we are done using an asset
+we tag them for release calling the release function within the resource class. This
+decrements the ref count.
+
+The resources that have no references can be disposed of based on time or memory
+constraints. The developer should not have to worry about the internals of the 
+ResourceManager
+
+*/

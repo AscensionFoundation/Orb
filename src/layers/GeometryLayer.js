@@ -102,7 +102,6 @@ orb.GeometryLayer = function ( ) {
 		light.set( 1, 0, 0 );
 		light.applyMatrix4( orb.time.matrix );
 		//light.copy( Orb.camera.position ).normalize();
-		//light.copy( Orb.camera.position ).normalize().multiplyScalar( -1 );
 
 		uniforms.v3LightPosition.value = light;
 		uniforms.fCameraHeight.value = camera;
